@@ -274,11 +274,6 @@ ImageProcessor::initProgram()
   return checkError("initProgram");
 }
 
-static inline GLint calculateRowSize(GLint width)
-{
-    return ((width * 24 + 31) / 32) * 4; 
-}
-
 std::unique_ptr<uint8_t[]>
 ImageProcessor::process(const ImageDesc& desc)
 {
@@ -298,8 +293,8 @@ ImageProcessor::process(const ImageDesc& desc)
   // allocate fbo and a texture
   glGenFramebuffers(1, &tmpFramebuffer);
   glGenTextures(3, tmpTexture);
-  allocateTexture(tmpTexture[0], desc.width, desc.height, GL_RGB);
-  allocateTexture(tmpTexture[1], desc.width, desc.height, GL_RGB);
+  allocateTexture(tmpTexture[0], desc.width, desc.height, GL_RGBA);
+  allocateTexture(tmpTexture[1], desc.width, desc.height, GL_RGBA);
   allocateTexture(tmpTexture[2], desc.width, desc.height, desc.format,
                   desc.data);
 
@@ -378,8 +373,8 @@ ImageProcessor::process(const ImageDesc& desc)
   glDisableVertexAttribArray(m_vPositionIndexThreshold);
   glPixelStorei(GL_PACK_ALIGNMENT, 4);
   std::unique_ptr<uint8_t[]> readback(
-    new uint8_t[calculateRowSize(desc.width) * desc.height]);
-  glReadPixels(0, 0, desc.width, desc.height, GL_RGB, GL_UNSIGNED_BYTE,
+    new uint8_t[desc.width * desc.height * 4]);
+  glReadPixels(0, 0, desc.width, desc.height, GL_RGBA, GL_UNSIGNED_BYTE,
                readback.get());
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glDeleteTextures(3, tmpTexture);

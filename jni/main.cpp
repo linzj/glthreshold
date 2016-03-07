@@ -178,7 +178,7 @@ main(int argc, char** argv)
     std::unique_ptr<uint8_t[]> processed(new uint8_t[desc.width * desc.height]);
     const uint8_t* rbp = readback.get();
     uint8_t* procp = processed.get();
-    for (int i = 0; i < desc.width * desc.height; ++i, ++procp, rbp += 3) {
+    for (int i = 0; i < desc.width * desc.height; ++i, ++procp, rbp += 4) {
       *procp = *rbp;
     }
     clock_gettime(CLOCK_MONOTONIC, &t2);

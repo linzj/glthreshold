@@ -1,6 +1,8 @@
 #ifndef GLCONTEXTMANAGER_H
 #define GLCONTEXTMANAGER_H
 #include <EGL/egl.h>
+#include <memory>
+#include <stdint.h>
 
 class GLContextManager
 {
