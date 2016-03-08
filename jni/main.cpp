@@ -16,7 +16,6 @@ gaussianLoadImageFromFile(const char* file)
   return image.release();
 }
 
-#if 0
 typedef uint32_t DWORD;
 typedef long LONG;
 typedef uint16_t WORD;
@@ -132,7 +131,6 @@ saveBitmap(int width, int height, const char* fileName, const char* data)
   hdr.biClrImportant = 0;
   CreateBMPFile(fileName, &hdr, data);
 }
-#endif
 
 int
 main(int argc, char** argv)
@@ -182,10 +180,22 @@ main(int argc, char** argv)
       *procp = *rbp;
     }
     clock_gettime(CLOCK_MONOTONIC, &t2);
-#if 0
+
+    int rowBytes = (desc.width * 24 + 31) / 32 * 4;
+    std::unique_ptr<uint8_t[]> saveBits(new uint8_t[rowBytes * desc.height]);
+    uint8_t* savep = saveBits.get();
+    procp = processed.get();
+    for (int y = 0; y < desc.height; ++y, savep += rowBytes) {
+      uint8_t* rowp = savep;
+      for (int x = 0; x < desc.width; ++x, ++procp, rowp += 3) {
+        rowp[0] = *procp;
+        rowp[1] = *procp;
+        rowp[2] = *procp;
+      }
+    }
     saveBitmap(desc.width, desc.height, "/sdcard/shit.bmp",
-               reinterpret_cast<char*>(readback.get()));
-#endif
+               reinterpret_cast<char*>(saveBits.get()));
+
     printf("one frame: %lf.\n", ((double)(t2.tv_sec - t1.tv_sec) +
                                  ((double)(t2.tv_nsec - t1.tv_nsec) / 1e9)));
   }
