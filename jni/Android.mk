@@ -22,6 +22,8 @@ LOCAL_MODULE    := glthreshold
 LOCAL_SRC_FILES := main.cpp \
 GLContextManager.cpp \
 AdaptiveThresholdProcessor.cpp \
+ImageProcessorWorkflow.cpp \
+GLResources.cpp \
 nvImage/src/rgbe.c \
 nvImage/src/nvImage.cpp \
 nvImage/src/nvImagePng.cpp \

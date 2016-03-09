@@ -9,7 +9,7 @@ public:
   AdaptiveThresholdProcessor();
   ~AdaptiveThresholdProcessor();
   bool init(int maxValue);
-  ImageOutput process(const ImageDesc& desc) override;
+  ProcessorOutput process(const ProcessorInput& desc) override;
   std::vector<GLfloat> m_kernel;
 
   GLint m_vPositionIndexRow;
@@ -37,8 +37,6 @@ private:
   static const GLint s_block_size = 92;
   void initGaussianBlurKernel();
   bool initProgram();
-  void allocateTexture(GLuint texture, GLint width, GLint height, GLenum format,
-                       void* data = nullptr);
   static std::vector<GLfloat> getGaussianKernel(int n);
 };
 #endif /* ADAPTIVETHRESHOLDPROCESSOR_H */

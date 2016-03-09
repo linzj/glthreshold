@@ -1,4 +1,6 @@
 #include "AdaptiveThresholdProcessor.h"
+#include "GLResources.h"
+#include "ImageProcessorWorkflow.h"
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
@@ -276,8 +278,8 @@ AdaptiveThresholdProcessor::initProgram()
   return checkError("initProgram");
 }
 
-ImageOutput
-AdaptiveThresholdProcessor::process(const ImageDesc& desc)
+ProcessorOutput
+AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
 {
   static float positions[][4] = {
     { -1.0, 1.0, 0.0, 1.0 },
@@ -285,39 +287,30 @@ AdaptiveThresholdProcessor::process(const ImageDesc& desc)
     { 1.0, 1.0, 0.0, 1.0 },
     { 1.0, -1.0, 0.0, 1.0 },
   };
-  GLuint tmpFramebuffer;
-  // zero for row blur, one for column blur, two for input image.
+  ImageProcessorWorkflow* wf = pin.wf;
+  FBOScope fboscope(wf);
+  // zero for row blur, one for column blur
   // zero additionally used as the final threshold output.
-  GLuint tmpTexture[3];
-  GLint oldViewport[4];
-  glGetIntegerv(GL_VIEWPORT, oldViewport);
-  glViewport(0, 0, desc.width, desc.height);
-  // allocate fbo and a texture
-  glGenFramebuffers(1, &tmpFramebuffer);
-  glGenTextures(3, tmpTexture);
-  allocateTexture(tmpTexture[0], desc.width, desc.height, GL_RGBA);
-  allocateTexture(tmpTexture[1], desc.width, desc.height, GL_RGBA);
-  allocateTexture(tmpTexture[2], desc.width, desc.height, desc.format,
-                  desc.data);
+  std::shared_ptr<GLTexture> tmpTexture[2] = {
+    wf->requestTextureForFramebuffer(), wf->requestTextureForFramebuffer()
+  };
 
   // bind fbo and complete it.
-  glBindFramebuffer(GL_FRAMEBUFFER, tmpFramebuffer);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         tmpTexture[0], 0);
+  wf->setColorAttachmentForFramebuffer(tmpTexture[0]->id());
 
-  if (GL_FRAMEBUFFER_COMPLETE != glCheckFramebufferStatus(GL_FRAMEBUFFER)) {
+  if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
     fprintf(stderr, "fbo is not completed %d, %x.\n", __LINE__,
             glCheckFramebufferStatus(GL_FRAMEBUFFER));
     exit(1);
   }
-  GLint imageGeometry[2] = { desc.width, desc.height };
+  GLint imageGeometry[2] = { pin.width, pin.height };
   glVertexAttribPointer(m_vPositionIndexRow, 4, GL_FLOAT, GL_FALSE, 0,
                         positions);
   glEnableVertexAttribArray(m_vPositionIndexRow);
   glUseProgram(m_programRow);
   // setup uniforms
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, tmpTexture[2]);
+  glBindTexture(GL_TEXTURE_2D, pin.color->id());
   glUniform1i(m_uTextureRow, 0);
 
   glUniform2iv(m_uScreenGeometryRow, 1, imageGeometry);
@@ -326,9 +319,8 @@ AdaptiveThresholdProcessor::process(const ImageDesc& desc)
   glUniform4fv(m_uKernelRow, s_block_size / 4, m_kernel.data());
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   // bind fbo and complete it.
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         tmpTexture[1], 0);
-  if (GL_FRAMEBUFFER_COMPLETE != glCheckFramebufferStatus(GL_FRAMEBUFFER)) {
+  wf->setColorAttachmentForFramebuffer(tmpTexture[1]->id());
+  if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
     fprintf(stderr, "fbo is not completed %d.\n", __LINE__);
     exit(1);
   }
@@ -340,7 +332,7 @@ AdaptiveThresholdProcessor::process(const ImageDesc& desc)
   glUseProgram(m_programColumn);
   // setup uniforms
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, tmpTexture[0]);
+  glBindTexture(GL_TEXTURE_2D, tmpTexture[0]->id());
   glUniform1i(m_uTextureColumn, 0);
 
   glUniform2iv(m_uScreenGeometryColumn, 1, imageGeometry);
@@ -356,46 +348,22 @@ AdaptiveThresholdProcessor::process(const ImageDesc& desc)
   glUseProgram(m_programThreshold);
   // setup uniforms
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, tmpTexture[2]);
+  glBindTexture(GL_TEXTURE_2D, pin.color->id());
   glUniform1i(m_uTextureOrigThreshold, 0);
   glActiveTexture(GL_TEXTURE0 + 1);
-  glBindTexture(GL_TEXTURE_2D, tmpTexture[1]);
+  glBindTexture(GL_TEXTURE_2D, tmpTexture[1]->id());
   glUniform1i(m_uTextureBlurThreshold, 1);
 
   glUniform2iv(m_uScreenGeometryThresholdg, 1, imageGeometry);
   glUniform1f(m_uMaxValueThreshold, static_cast<float>(m_maxValue) / 255.0f);
 
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                         tmpTexture[0], 0);
-  if (GL_FRAMEBUFFER_COMPLETE != glCheckFramebufferStatus(GL_FRAMEBUFFER)) {
+  wf->setColorAttachmentForFramebuffer(tmpTexture[0]->id());
+  if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
     fprintf(stderr, "fbo is not completed %d.\n", __LINE__);
     exit(1);
   }
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glDisableVertexAttribArray(m_vPositionIndexThreshold);
-  glPixelStorei(GL_PACK_ALIGNMENT, 4);
-  std::unique_ptr<uint8_t[]> readback(
-    new uint8_t[desc.width * desc.height * 4]);
-  glReadPixels(0, 0, desc.width, desc.height, GL_RGBA, GL_UNSIGNED_BYTE,
-               readback.get());
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glDeleteTextures(3, tmpTexture);
-  glDeleteFramebuffers(1, &tmpFramebuffer);
-  glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
   checkError("image process");
-  return ImageOutput{ std::move(readback) };
-}
-
-void
-AdaptiveThresholdProcessor::allocateTexture(GLuint texture, GLint width,
-                                            GLint height, GLenum format,
-                                            void* data)
-{
-  glBindTexture(GL_TEXTURE_2D, texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-               GL_UNSIGNED_BYTE, data);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  return ProcessorOutput{ tmpTexture[0] };
 }

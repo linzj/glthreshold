@@ -4,23 +4,26 @@
 #include <memory>
 #include <stdint.h>
 
-struct ImageDesc
+class GLTexture;
+class ImageProcessorWorkflow;
+
+struct ProcessorOutput
 {
-  GLint width, height;
-  GLenum format;
-  void* data;
+  std::shared_ptr<GLTexture> color;
 };
 
-struct ImageOutput
+struct ProcessorInput
 {
-  std::unique_ptr<uint8_t[]> outputBytes;
+  GLint width, height;
+  std::shared_ptr<GLTexture> color;
+  ImageProcessorWorkflow* wf;
 };
 
 class IImageProcessor
 {
 public:
   virtual ~IImageProcessor() = default;
-  virtual ImageOutput process(const ImageDesc& desc) = 0;
+  virtual ProcessorOutput process(const ProcessorInput& desc) = 0;
 };
 
 #endif /* IIMAGEPROCESSOR_H */
