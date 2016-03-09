@@ -1,5 +1,5 @@
+#include "AdaptiveThresholdProcessor.h"
 #include "GLContextManager.h"
-#include "ImageProcessor.h"
 #include <memory>
 #include <nvImage.h>
 #include <stdio.h>
@@ -162,7 +162,7 @@ main(int argc, char** argv)
   }
   {
     GLContextScope scope(glContextManager);
-    ImageProcessor processor;
+    AdaptiveThresholdProcessor processor;
     if (!processor.init(211)) {
       printf("fails to create image processor.\n");
       return 1;
@@ -172,7 +172,8 @@ main(int argc, char** argv)
 
     ImageDesc desc = { image->getWidth(), image->getHeight(),
                        image->getFormat(), image->getLevel(0) };
-    std::unique_ptr<uint8_t[]> readback(processor.process(desc));
+    ImageOutput imo = processor.process(desc);
+    std::unique_ptr<uint8_t[]> readback(std::move(imo.outputBytes));
     std::unique_ptr<uint8_t[]> processed(new uint8_t[desc.width * desc.height]);
     const uint8_t* rbp = readback.get();
     uint8_t* procp = processed.get();

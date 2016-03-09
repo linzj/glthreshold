@@ -1,24 +1,15 @@
-#ifndef IMAGEPROCESSOR_H
-#define IMAGEPROCESSOR_H
-#include <GLES2/gl2.h>
-#include <memory>
-#include <stdint.h>
+#ifndef ADAPTIVETHRESHOLDPROCESSOR_H
+#define ADAPTIVETHRESHOLDPROCESSOR_H
+#include "IImageProcessor.h"
 #include <vector>
 
-struct ImageDesc
-{
-  GLint width, height;
-  GLenum format;
-  void* data;
-};
-
-class ImageProcessor
+class AdaptiveThresholdProcessor : public IImageProcessor
 {
 public:
-  ImageProcessor();
-  ~ImageProcessor();
+  AdaptiveThresholdProcessor();
+  ~AdaptiveThresholdProcessor();
   bool init(int maxValue);
-  std::unique_ptr<uint8_t[]> process(const ImageDesc& desc);
+  ImageOutput process(const ImageDesc& desc) override;
   std::vector<GLfloat> m_kernel;
 
   GLint m_vPositionIndexRow;
@@ -50,4 +41,4 @@ private:
                        void* data = nullptr);
   static std::vector<GLfloat> getGaussianKernel(int n);
 };
-#endif /* IMAGEPROCESSOR_H */
+#endif /* ADAPTIVETHRESHOLDPROCESSOR_H */

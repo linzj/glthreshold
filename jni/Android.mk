@@ -21,7 +21,7 @@ LOCAL_CFLAGS += -Ijni/nvImage/include -Ijni/libpng-1.2.51
 LOCAL_MODULE    := glthreshold
 LOCAL_SRC_FILES := main.cpp \
 GLContextManager.cpp \
-ImageProcessor.cpp \
+AdaptiveThresholdProcessor.cpp \
 nvImage/src/rgbe.c \
 nvImage/src/nvImage.cpp \
 nvImage/src/nvImagePng.cpp \

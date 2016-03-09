@@ -1,9 +1,9 @@
-#include "ImageProcessor.h"
+#include "AdaptiveThresholdProcessor.h"
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
 
-ImageProcessor::ImageProcessor()
+AdaptiveThresholdProcessor::AdaptiveThresholdProcessor()
   : m_vPositionIndexRow(0)
   , m_uTextureRow(0)
   , m_uScreenGeometryRow(0)
@@ -24,7 +24,7 @@ ImageProcessor::ImageProcessor()
 {
 }
 
-ImageProcessor::~ImageProcessor()
+AdaptiveThresholdProcessor::~AdaptiveThresholdProcessor()
 {
   if (m_programRow) {
     glDeleteProgram(m_programRow);
@@ -38,7 +38,7 @@ ImageProcessor::~ImageProcessor()
 }
 
 bool
-ImageProcessor::init(int maxValue)
+AdaptiveThresholdProcessor::init(int maxValue)
 {
   m_maxValue = maxValue;
   initGaussianBlurKernel();
@@ -46,7 +46,7 @@ ImageProcessor::init(int maxValue)
 }
 
 std::vector<GLfloat>
-ImageProcessor::getGaussianKernel(int n)
+AdaptiveThresholdProcessor::getGaussianKernel(int n)
 {
   std::vector<GLfloat> kernel(n);
   float* cf = const_cast<float*>(kernel.data());
@@ -74,7 +74,7 @@ ImageProcessor::getGaussianKernel(int n)
 }
 
 void
-ImageProcessor::initGaussianBlurKernel()
+AdaptiveThresholdProcessor::initGaussianBlurKernel()
 {
   m_kernel = std::move(getGaussianKernel(s_block_size));
 }
@@ -99,7 +99,11 @@ static const char* gaussianFragRowSource =
   "    highp float toffset = 1.0 / float(u_screenGeometry.x);\n"
   "    highp vec3 color = vec3(0.0);\n"
   "    for (i = 0.0; i < c_blockSize; i += 4.0) {\n"
-  "       color.r += dot(vec4(texture2D(u_texture, texcoord + vec2(i * toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((1.0 + i) * toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((2.0 + i) * toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((3.0 + i) * toffset, 0.0)).r), u_kernel[int(i / 4.0)]);\n"
+  "       color.r += dot(vec4(texture2D(u_texture, texcoord + vec2(i * "
+  "toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((1.0 + i) * toffset, "
+  "0.0)).r, texture2D(u_texture, texcoord + vec2((2.0 + i) * toffset, 0.0)).r, "
+  "texture2D(u_texture, texcoord + vec2((3.0 + i) * toffset, 0.0)).r), "
+  "u_kernel[int(i / 4.0)]);\n"
   "    }\n"
   "    gl_FragColor = vec4(color, 1.0);\n"
   "}\n";
@@ -118,7 +122,11 @@ static const char* gaussianFragColumnSource =
   "    highp float toffset = 1.0 / float(u_screenGeometry.y);\n"
   "    highp vec3 color = vec3(0.0);\n"
   "    for (i = 0.0; i < c_blockSize; i += 4.0) {\n"
-  "       color.r += dot(vec4(texture2D(u_texture, texcoord - vec2(0.0, i * toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (1.0 + i) * toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (2.0 + i) * toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (3.0 + i) * toffset)).r), u_kernel[int(i / 4.0)]);\n"
+  "       color.r += dot(vec4(texture2D(u_texture, texcoord - vec2(0.0, i * "
+  "toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (1.0 + i) * "
+  "toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (2.0 + i) * "
+  "toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (3.0 + i) * "
+  "toffset)).r), u_kernel[int(i / 4.0)]);\n"
   "    }\n"
   "    gl_FragColor = vec4(color, 1.0);\n"
   "}\n";
@@ -211,7 +219,7 @@ createProgram(GLuint vertexShader, GLuint fragmentShader)
 }
 
 bool
-ImageProcessor::initProgram()
+AdaptiveThresholdProcessor::initProgram()
 {
   GLuint vertexShader =
     compileShaderSource(GL_VERTEX_SHADER, 1, &vertexShaderSource);
@@ -268,8 +276,8 @@ ImageProcessor::initProgram()
   return checkError("initProgram");
 }
 
-std::unique_ptr<uint8_t[]>
-ImageProcessor::process(const ImageDesc& desc)
+ImageOutput
+AdaptiveThresholdProcessor::process(const ImageDesc& desc)
 {
   static float positions[][4] = {
     { -1.0, 1.0, 0.0, 1.0 },
@@ -375,12 +383,13 @@ ImageProcessor::process(const ImageDesc& desc)
   glDeleteFramebuffers(1, &tmpFramebuffer);
   glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
   checkError("image process");
-  return readback;
+  return ImageOutput{ std::move(readback) };
 }
 
 void
-ImageProcessor::allocateTexture(GLuint texture, GLint width, GLint height,
-                                GLenum format, void* data)
+AdaptiveThresholdProcessor::allocateTexture(GLuint texture, GLint width,
+                                            GLint height, GLenum format,
+                                            void* data)
 {
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
