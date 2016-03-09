@@ -81,74 +81,11 @@ AdaptiveThresholdProcessor::initGaussianBlurKernel()
   m_kernel = std::move(getGaussianKernel(s_block_size));
 }
 
-static const char* vertexShaderSource = "attribute vec4 v_position;\n"
-                                        "void main()\n"
-                                        "{\n"
-                                        "   gl_Position = v_position;\n"
-                                        "}\n";
-
-static const char* gaussianFragRowSource =
-  "uniform sampler2D u_texture;\n"
-  "uniform ivec2 u_screenGeometry;\n"
-  "uniform mediump vec4 u_kernel[92 / 4];\n"
-  "const mediump float c_blockSize = 92.0;\n"
-  "\n"
-  "void main(void)\n"
-  "{\n"
-  "    mediump float i;\n"
-  "    highp vec2 texcoord = (gl_FragCoord.xy - vec2(c_blockSize / 2.0, 0)) / "
-  "vec2(u_screenGeometry);\n"
-  "    highp float toffset = 1.0 / float(u_screenGeometry.x);\n"
-  "    highp vec3 color = vec3(0.0);\n"
-  "    for (i = 0.0; i < c_blockSize; i += 4.0) {\n"
-  "       color.r += dot(vec4(texture2D(u_texture, texcoord + vec2(i * "
-  "toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((1.0 + i) * toffset, "
-  "0.0)).r, texture2D(u_texture, texcoord + vec2((2.0 + i) * toffset, 0.0)).r, "
-  "texture2D(u_texture, texcoord + vec2((3.0 + i) * toffset, 0.0)).r), "
-  "u_kernel[int(i / 4.0)]);\n"
-  "    }\n"
-  "    gl_FragColor = vec4(color, 1.0);\n"
-  "}\n";
-
-static const char* gaussianFragColumnSource =
-  "uniform sampler2D u_texture;\n"
-  "uniform ivec2 u_screenGeometry;\n"
-  "uniform mediump vec4 u_kernel[92 / 4];\n"
-  "const mediump float c_blockSize = 92.0;\n"
-  "\n"
-  "void main(void)\n"
-  "{\n"
-  "    mediump float i;\n"
-  "    highp vec2 texcoord = (gl_FragCoord.xy + vec2(0, c_blockSize / 2.0)) / "
-  "vec2(u_screenGeometry);\n"
-  "    highp float toffset = 1.0 / float(u_screenGeometry.y);\n"
-  "    highp vec3 color = vec3(0.0);\n"
-  "    for (i = 0.0; i < c_blockSize; i += 4.0) {\n"
-  "       color.r += dot(vec4(texture2D(u_texture, texcoord - vec2(0.0, i * "
-  "toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (1.0 + i) * "
-  "toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (2.0 + i) * "
-  "toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (3.0 + i) * "
-  "toffset)).r), u_kernel[int(i / 4.0)]);\n"
-  "    }\n"
-  "    gl_FragColor = vec4(color, 1.0);\n"
-  "}\n";
-
-static const char* thresholdFragSource =
-  "\n"
-  "uniform mediump float u_maxValue;\n"
-  "uniform ivec2 u_screenGeometry;\n"
-  "uniform sampler2D u_textureOrig;\n"
-  "uniform sampler2D u_textureBlur;\n"
-  "\n"
-  "void main(void)\n"
-  "{\n"
-  "    highp vec2 texcoord = gl_FragCoord.xy / vec2(u_screenGeometry);\n"
-  "    mediump float colorOrig = texture2D(u_textureOrig, texcoord).r;\n"
-  "    mediump float colorBlur = texture2D(u_textureBlur, texcoord).r;\n"
-  "    mediump vec3 result;\n"
-  "    result = vec3(colorOrig > colorBlur ? u_maxValue : 0.0);\n"
-  "    gl_FragColor = vec4(result, 1.0);\n"
-  "}\n";
+extern "C" {
+extern const char* gaussianFragRowSource;
+extern const char* gaussianFragColumnSource;
+extern const char* thresholdFragSource;
+}
 
 /* report GL errors, if any, to stderr */
 static bool
@@ -224,7 +161,7 @@ bool
 AdaptiveThresholdProcessor::initProgram()
 {
   GLuint vertexShader =
-    compileShaderSource(GL_VERTEX_SHADER, 1, &vertexShaderSource);
+    compileShaderSource(GL_VERTEX_SHADER, 1, getVertexSourceLocation());
 
   GLuint fragmentRowShader =
     compileShaderSource(GL_FRAGMENT_SHADER, 1, &gaussianFragRowSource);

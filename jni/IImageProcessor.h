@@ -24,6 +24,15 @@ class IImageProcessor
 public:
   virtual ~IImageProcessor() = default;
   virtual ProcessorOutput process(const ProcessorInput& desc) = 0;
+  static inline const char** getVertexSourceLocation()
+  {
+    static const char* vertexShaderSource = "attribute vec4 v_position;\n"
+                                            "void main()\n"
+                                            "{\n"
+                                            "   gl_Position = v_position;\n"
+                                            "}\n";
+    return &vertexShaderSource;
+  }
 };
 
 #endif /* IIMAGEPROCESSOR_H */

@@ -17,7 +17,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_CXXFLAGS += -std=c++11
-LOCAL_CFLAGS += -Ijni/nvImage/include -Ijni/libpng-1.2.51
+LOCAL_CFLAGS += -I$(LOCAL_PATH)/nvImage/include -I$(LOCAL_PATH)/libpng-1.2.51
 LOCAL_MODULE    := glthreshold
 LOCAL_SRC_FILES := main.cpp \
 GLContextManager.cpp \
@@ -27,6 +27,7 @@ GLResources.cpp \
 nvImage/src/rgbe.c \
 nvImage/src/nvImage.cpp \
 nvImage/src/nvImagePng.cpp \
+glsl.glsl.c \
 libpng-1.2.51/png.c \
 libpng-1.2.51/pngerror.c \
 libpng-1.2.51/pnggccrd.c \
@@ -44,6 +45,14 @@ libpng-1.2.51/pngwio.c \
 libpng-1.2.51/pngwrite.c \
 libpng-1.2.51/pngwtran.c \
 libpng-1.2.51/pngwutil.c \
+
+GLSL_BINDING := \
+	jni/glsl.glsl.c
+
+$(GLSL_BINDING): jni/glsl.glsl jni/updateglsl.py
+	python jni/updateglsl.py $<
+
+.PHONY: $(GLSL_BINDING)
 
 LOCAL_LDLIBS = -lz -lGLESv2 -lEGL
 include $(BUILD_EXECUTABLE)
