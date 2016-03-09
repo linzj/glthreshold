@@ -43,7 +43,7 @@ public:
   GLint m_programThreshold;
 
 private:
-  static const GLint s_block_size = 91;
+  static const GLint s_block_size = 92;
   void initGaussianBlurKernel();
   bool initProgram();
   void allocateTexture(GLuint texture, GLint width, GLint height, GLenum format,

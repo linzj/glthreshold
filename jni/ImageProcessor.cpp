@@ -86,22 +86,21 @@ static const char* vertexShaderSource = "attribute vec4 v_position;\n"
                                         "}\n";
 
 static const char* gaussianFragRowSource =
+  "precision highp sampler2D;\n"
   "uniform sampler2D u_texture;\n"
   "uniform ivec2 u_screenGeometry;\n"
-  "uniform mediump float u_kernel[91];\n"
-  "const int c_blockSize = 91;\n"
+  "uniform mediump vec4 u_kernel[92 / 4];\n"
+  "const float c_blockSize = 92.0;\n"
   "\n"
   "void main(void)\n"
   "{\n"
-  "    int i;\n"
-  "    highp vec2 texcoord = (gl_FragCoord.xy - vec2(c_blockSize / 2, 0)) / "
+  "    float i;\n"
+  "    highp vec2 texcoord = (gl_FragCoord.xy - vec2(c_blockSize / 2.0, 0)) / "
   "vec2(u_screenGeometry);\n"
   "    highp float toffset = 1.0 / float(u_screenGeometry.x);\n"
-  "    mediump vec3 color = texture2D(u_texture, texcoord).rgb * "
-  "vec3(u_kernel[0]);\n"
-  "    for (i = 1; i < c_blockSize; ++i) {\n"
-  "        color += texture2D(u_texture, texcoord + vec2(float(i) * toffset, "
-  "0.0)).rgb * vec3(u_kernel[i]);\n"
+  "    highp vec3 color = vec3(0.0);\n"
+  "    for (i = 0.0; i < c_blockSize; i += 4.0) {\n"
+  "       color.r += dot(vec4(texture2D(u_texture, texcoord + vec2(i * toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((1.0 + i) * toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((2.0 + i) * toffset, 0.0)).r, texture2D(u_texture, texcoord + vec2((3.0 + i) * toffset, 0.0)).r), u_kernel[int(i / 4.0)]);\n"
   "    }\n"
   "    gl_FragColor = vec4(color, 1.0);\n"
   "}\n";
@@ -109,20 +108,18 @@ static const char* gaussianFragRowSource =
 static const char* gaussianFragColumnSource =
   "uniform sampler2D u_texture;\n"
   "uniform ivec2 u_screenGeometry;\n"
-  "uniform mediump float u_kernel[91];\n"
-  "const int c_blockSize = 91;\n"
+  "uniform mediump vec4 u_kernel[92 / 4];\n"
+  "const float c_blockSize = 92.0;\n"
   "\n"
   "void main(void)\n"
   "{\n"
-  "    int i;\n"
-  "    highp vec2 texcoord = (gl_FragCoord.xy + vec2(0, c_blockSize / 2)) / "
+  "    float i;\n"
+  "    highp vec2 texcoord = (gl_FragCoord.xy + vec2(0, c_blockSize / 2.0)) / "
   "vec2(u_screenGeometry);\n"
   "    highp float toffset = 1.0 / float(u_screenGeometry.y);\n"
-  "    mediump vec3 color = texture2D(u_texture, texcoord).rgb * "
-  "vec3(u_kernel[0]);\n"
-  "    for (i = 1; i < c_blockSize; ++i) {\n"
-  "        color += texture2D(u_texture, texcoord - vec2(0.0, float(i) * "
-  "toffset)).rgb * vec3(u_kernel[i]);\n"
+  "    highp vec3 color = vec3(0.0);\n"
+  "    for (i = 0.0; i < c_blockSize; i += 4.0) {\n"
+  "       color.r += dot(vec4(texture2D(u_texture, texcoord - vec2(0.0, i * toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (1.0 + i) * toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (2.0 + i) * toffset)).r, texture2D(u_texture, texcoord - vec2(0.0, (3.0 + i) * toffset)).r), u_kernel[int(i / 4.0)]);\n"
   "    }\n"
   "    gl_FragColor = vec4(color, 1.0);\n"
   "}\n";
@@ -137,12 +134,10 @@ static const char* thresholdFragSource =
   "void main(void)\n"
   "{\n"
   "    highp vec2 texcoord = gl_FragCoord.xy / vec2(u_screenGeometry);\n"
-  "    mediump vec3 colorOrig = texture2D(u_textureOrig, texcoord).rgb;\n"
-  "    mediump vec3 colorBlur = texture2D(u_textureBlur, texcoord).rgb;\n"
+  "    mediump float colorOrig = texture2D(u_textureOrig, texcoord).r;\n"
+  "    mediump float colorBlur = texture2D(u_textureBlur, texcoord).r;\n"
   "    mediump vec3 result;\n"
-  "    result.r = colorOrig.r > colorBlur.r ? u_maxValue : 0.0;\n"
-  "    result.g = colorOrig.g > colorBlur.g ? u_maxValue : 0.0;\n"
-  "    result.b = colorOrig.b > colorBlur.b ? u_maxValue : 0.0;\n"
+  "    result = vec3(colorOrig > colorBlur ? u_maxValue : 0.0);\n"
   "    gl_FragColor = vec4(result, 1.0);\n"
   "}\n";
 
@@ -321,7 +316,7 @@ ImageProcessor::process(const ImageDesc& desc)
   glUniform2iv(m_uScreenGeometryRow, 1, imageGeometry);
   // setup kernel and block size
 
-  glUniform1fv(m_uKernelRow, s_block_size, m_kernel.data());
+  glUniform4fv(m_uKernelRow, s_block_size / 4, m_kernel.data());
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   // bind fbo and complete it.
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
@@ -344,7 +339,7 @@ ImageProcessor::process(const ImageDesc& desc)
   glUniform2iv(m_uScreenGeometryColumn, 1, imageGeometry);
   // setup kernel and block size
 
-  glUniform1fv(m_uKernelColumn, s_block_size, m_kernel.data());
+  glUniform4fv(m_uKernelColumn, s_block_size / 4, m_kernel.data());
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glDisableVertexAttribArray(m_vPositionIndexColumn);
   // render to screen
