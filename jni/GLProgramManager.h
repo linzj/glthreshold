@@ -13,6 +13,8 @@ public:
     THRESHOLD,
     DILATENONZEROROW,
     DILATENONZEROCOLUMN,
+    ERODENONZEROROW,
+    ERODENONZEROCOLUMN,
   };
   GLProgramManager();
   ~GLProgramManager();

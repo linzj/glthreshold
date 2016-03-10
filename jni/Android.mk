@@ -23,6 +23,7 @@ LOCAL_SRC_FILES := main.cpp \
 GLContextManager.cpp \
 AdaptiveThresholdProcessor.cpp \
 DilateNonZeroProcessor.cpp \
+ErodeNonZeroProcessor.cpp \
 ImageProcessorWorkflow.cpp \
 GLResources.cpp \
 GLCommon.cpp \

@@ -6,6 +6,8 @@ extern const char* gaussianFragColumnSource;
 extern const char* thresholdFragSource;
 extern const char* dilateNonZeroRowSource;
 extern const char* dilateNonZeroColumnSource;
+extern const char* erodeNonZeroRowSource;
+extern const char* erodeNonZeroColumnSource;
 }
 
 static inline const char**
@@ -31,6 +33,8 @@ getSourceMap()
     { GLProgramManager::THRESHOLD, &thresholdFragSource },
     { GLProgramManager::DILATENONZEROROW, &dilateNonZeroRowSource },
     { GLProgramManager::DILATENONZEROCOLUMN, &dilateNonZeroColumnSource },
+    { GLProgramManager::ERODENONZEROROW, &erodeNonZeroRowSource },
+    { GLProgramManager::ERODENONZEROCOLUMN, &erodeNonZeroColumnSource },
   };
   return g_map;
 }

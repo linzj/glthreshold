@@ -1,5 +1,6 @@
 #include "AdaptiveThresholdProcessor.h"
 #include "DilateNonZeroProcessor.h"
+#include "ErodeNonZeroProcessor.h"
 #include "GLContextManager.h"
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
@@ -183,8 +184,15 @@ main(int argc, char** argv)
       printf("fails to create image dilateNonZeroProcessor.\n");
       return 1;
     }
+    std::unique_ptr<ErodeNonZeroProcessor> erodeNonZeroProcessor(
+      new ErodeNonZeroProcessor);
+    if (!erodeNonZeroProcessor->init(&pm, 3, 3, 4)) {
+      printf("fails to create image erodeNonZeroProcessor.\n");
+      return 1;
+    }
     wf.registerIImageProcessor(adaptiveThresholdProcessor.get());
     wf.registerIImageProcessor(dilateNonZeroProcessor.get());
+    wf.registerIImageProcessor(erodeNonZeroProcessor.get());
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
 
