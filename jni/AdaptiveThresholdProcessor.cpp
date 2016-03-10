@@ -87,7 +87,7 @@ AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
          "%d.\n",
          m_uTextureColumn, m_uScreenGeometryColumn, m_uKernelColumn);
 
-  m_programThreshold = pm->getProgram(GLProgramManager::THRESHOLD);
+  m_programThreshold = pm->getProgram(GLProgramManager::ADAPTIVETHRESHOLD);
   program = m_programThreshold;
 
   m_uTextureOrigThreshold = glGetUniformLocation(program, "u_textureOrig");

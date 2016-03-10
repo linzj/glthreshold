@@ -37,8 +37,7 @@ DilateNonZeroProcessor::process(const ProcessorInput& pin)
 {
   ImageProcessorWorkflow* wf = pin.wf;
   FBOScope fboscope(wf);
-  // zero for row blur, one for column blur
-  // zero additionally used as the final threshold output.
+  // zero for row process, one for column process
   std::shared_ptr<GLTexture> tmpTexture[2] = {
     wf->requestTextureForFramebuffer(), wf->requestTextureForFramebuffer()
   };

@@ -42,7 +42,7 @@ toffset)).r), u_kernel[int(i / 4.0)]);
     }
     gl_FragColor = vec4(color, 1.0);
 }
----thresholdFragSource
+---adaptiveThresholdFragSource
 uniform mediump float u_maxValue;
 uniform ivec2 u_screenGeometry;
 uniform sampler2D u_textureOrig;

@@ -3,11 +3,12 @@
 extern "C" {
 extern const char* gaussianFragRowSource;
 extern const char* gaussianFragColumnSource;
-extern const char* thresholdFragSource;
+extern const char* adaptiveThresholdFragSource;
 extern const char* dilateNonZeroRowSource;
 extern const char* dilateNonZeroColumnSource;
 extern const char* erodeNonZeroRowSource;
 extern const char* erodeNonZeroColumnSource;
+extern const char* thresholdSource;
 }
 
 static inline const char**
@@ -30,11 +31,12 @@ getSourceMap()
   static SourceMap g_map = {
     { GLProgramManager::GAUSSIANROW, &gaussianFragRowSource },
     { GLProgramManager::GAUSSIANCOLUMN, &gaussianFragColumnSource },
-    { GLProgramManager::THRESHOLD, &thresholdFragSource },
+    { GLProgramManager::ADAPTIVETHRESHOLD, &adaptiveThresholdFragSource },
     { GLProgramManager::DILATENONZEROROW, &dilateNonZeroRowSource },
     { GLProgramManager::DILATENONZEROCOLUMN, &dilateNonZeroColumnSource },
     { GLProgramManager::ERODENONZEROROW, &erodeNonZeroRowSource },
     { GLProgramManager::ERODENONZEROCOLUMN, &erodeNonZeroColumnSource },
+    { GLProgramManager::THRESHOLD, &thresholdSource },
   };
   return g_map;
 }

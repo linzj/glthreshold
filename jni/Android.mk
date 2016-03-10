@@ -22,6 +22,7 @@ LOCAL_MODULE    := glthreshold
 LOCAL_SRC_FILES := main.cpp \
 GLContextManager.cpp \
 AdaptiveThresholdProcessor.cpp \
+ThresholdProcessor.cpp \
 DilateNonZeroProcessor.cpp \
 ErodeNonZeroProcessor.cpp \
 ImageProcessorWorkflow.cpp \

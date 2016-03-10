@@ -4,6 +4,7 @@
 #include "GLContextManager.h"
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
+#include "ThresholdProcessor.h"
 #include <memory>
 #include <nvImage.h>
 #include <stdio.h>
@@ -190,9 +191,17 @@ main(int argc, char** argv)
       printf("fails to create image erodeNonZeroProcessor.\n");
       return 1;
     }
-    wf.registerIImageProcessor(adaptiveThresholdProcessor.get());
-    wf.registerIImageProcessor(dilateNonZeroProcessor.get());
-    wf.registerIImageProcessor(erodeNonZeroProcessor.get());
+    std::unique_ptr<ThresholdProcessor> thresholdProcessor(
+      new ThresholdProcessor);
+    if (!thresholdProcessor->init(&pm, 255, 80)) {
+      printf("fails to create image thresholdProcessor.\n");
+      return 1;
+    }
+    // wf.registerIImageProcessor(adaptiveThresholdProcessor.get());
+    // wf.registerIImageProcessor(dilateNonZeroProcessor.get());
+    // wf.registerIImageProcessor(erodeNonZeroProcessor.get());
+    wf.registerIImageProcessor(thresholdProcessor.get());
+
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
 
