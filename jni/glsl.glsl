@@ -129,3 +129,16 @@ vec2(u_screenGeometry);
     }
     gl_FragColor = m;
 }
+---thresholdSource
+uniform ivec2 u_screenGeometry;
+uniform mediump float u_maxValue;
+uniform mediump float u_threshold;
+uniform sampler2D u_texture;
+
+void main(void)
+{
+    highp vec2 texcoord = (gl_FragCoord.xy) /
+vec2(u_screenGeometry);
+    highp float rcolor = texture2D(u_texture, texcoord).r;
+    gl_FragColor = vec4(rcolor > u_threshold ? u_maxValue : 0.0);
+}

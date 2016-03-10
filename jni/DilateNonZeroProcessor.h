@@ -14,13 +14,11 @@ public:
 
 private:
   bool initProgram(GLProgramManager* pm);
-  GLint m_vPositionIndexRow;
   GLint m_uTextureRow;
   GLint m_uScreenGeometryRow;
   GLint m_uKWidthRow;
   GLint m_programRow;
 
-  GLint m_vPositionIndexColumn;
   GLint m_uTextureColumn;
   GLint m_uScreenGeometryColumn;
   GLint m_uKHeightColumn;

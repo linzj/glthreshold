@@ -5,13 +5,11 @@
 #include <stdlib.h>
 
 ErodeNonZeroProcessor::ErodeNonZeroProcessor()
-  : m_vPositionIndexRow(0)
-  , m_uTextureRow(0)
+  : m_uTextureRow(0)
   , m_uScreenGeometryRow(0)
   , m_uKWidthRow(0)
   , m_programRow(0)
 
-  , m_vPositionIndexColumn(0)
   , m_uTextureColumn(0)
   , m_uScreenGeometryColumn(0)
   , m_uKHeightColumn(0)
@@ -96,8 +94,6 @@ ErodeNonZeroProcessor::initProgram(GLProgramManager* pm)
     return false;
   }
   GLuint program = m_programRow;
-  m_vPositionIndexRow = glGetAttribLocation(program, "v_position");
-  printf("m_vPositionIndexRow: %d.\n", m_vPositionIndexRow);
   m_uTextureRow = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryRow = glGetUniformLocation(program, "u_screenGeometry");
   m_uKWidthRow = glGetUniformLocation(program, "u_kRowSize");
@@ -105,8 +101,6 @@ ErodeNonZeroProcessor::initProgram(GLProgramManager* pm)
          m_uTextureRow, m_uScreenGeometryRow, m_uKWidthRow);
 
   program = m_programColumn;
-  m_vPositionIndexColumn = glGetAttribLocation(program, "v_position");
-  printf("m_vPositionIndexColumn: %d.\n", m_vPositionIndexColumn);
   m_uTextureColumn = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryColumn = glGetUniformLocation(program, "u_screenGeometry");
   m_uKHeightColumn = glGetUniformLocation(program, "u_kColumnSize");

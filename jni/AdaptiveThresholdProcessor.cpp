@@ -7,18 +7,15 @@
 #include <stdlib.h>
 
 AdaptiveThresholdProcessor::AdaptiveThresholdProcessor()
-  : m_vPositionIndexRow(0)
-  , m_uTextureRow(0)
+  : m_uTextureRow(0)
   , m_uScreenGeometryRow(0)
   , m_uKernelRow(0)
   , m_programRow(0)
-  , m_vPositionIndexColumn(0)
   , m_uTextureColumn(0)
   , m_uScreenGeometryColumn(0)
   , m_uKernelColumn(0)
   , m_programColumn(0)
   , m_maxValue(0)
-  , m_vPositionIndexThreshold(0)
   , m_uTextureOrigThreshold(0)
   , m_uTextureBlurThreshold(0)
   , m_uScreenGeometryThresholdg(0)
@@ -75,8 +72,6 @@ AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
   m_programRow = pm->getProgram(GLProgramManager::GAUSSIANROW);
   m_programColumn = pm->getProgram(GLProgramManager::GAUSSIANCOLUMN);
   GLint program = m_programRow;
-  m_vPositionIndexRow = glGetAttribLocation(program, "v_position");
-  printf("m_vPositionIndexRow: %d.\n", m_vPositionIndexRow);
   m_uTextureRow = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryRow = glGetUniformLocation(program, "u_screenGeometry");
   m_uKernelRow = glGetUniformLocation(program, "u_kernel");
@@ -85,8 +80,6 @@ AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
 
   program = m_programColumn;
 
-  m_vPositionIndexColumn = glGetAttribLocation(program, "v_position");
-  printf("m_vPositionIndexColumn: %d.\n", m_vPositionIndexColumn);
   m_uTextureColumn = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryColumn = glGetUniformLocation(program, "u_screenGeometry");
   m_uKernelColumn = glGetUniformLocation(program, "u_kernel");
@@ -97,8 +90,6 @@ AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
   m_programThreshold = pm->getProgram(GLProgramManager::THRESHOLD);
   program = m_programThreshold;
 
-  m_vPositionIndexThreshold = glGetAttribLocation(program, "v_position");
-  printf("m_vPositionIndexThreshold: %d.\n", m_vPositionIndexThreshold);
   m_uTextureOrigThreshold = glGetUniformLocation(program, "u_textureOrig");
   m_uTextureBlurThreshold = glGetUniformLocation(program, "u_textureBlur");
   m_uScreenGeometryThresholdg =
