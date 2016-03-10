@@ -30,11 +30,11 @@ ImageProcessorWorkflow::~ImageProcessorWorkflow()
   m_staled = true;
   glDeleteFramebuffers(1, &m_fbo);
 }
+
 void
 ImageProcessorWorkflow::registerIImageProcessor(IImageProcessor* processor)
 {
-  m_processors.push_back(
-    std::move(std::unique_ptr<IImageProcessor>(processor)));
+  m_processors.push_back(processor);
 }
 
 ImageOutput
@@ -45,7 +45,7 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   GLuint texture;
   glGenTextures(1, &texture);
   allocateTexture(texture, m_width, m_height, desc.format, desc.data);
-  std::shared_ptr<GLTexture> scope(new GLRebornTexture(texture, this));
+  std::shared_ptr<GLTexture> scope(new GLTexture(texture));
 
   // save old viewport
   GLint oldViewport[4];
@@ -55,10 +55,19 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   ProcessorInput pin = { m_width, m_height, scope, this };
   scope.reset();
   preallocateTextures();
+  static float positions[][4] = {
+    { -1.0, 1.0, 0.0, 1.0 },
+    { -1.0, -1.0, 0.0, 1.0 },
+    { 1.0, 1.0, 0.0, 1.0 },
+    { 1.0, -1.0, 0.0, 1.0 },
+  };
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, positions);
+  glEnableVertexAttribArray(0);
   for (auto& p : m_processors) {
     ProcessorOutput pout = p->process(pin);
     pin.color = pout.color;
   }
+  glDisableVertexAttribArray(0);
   FBOScope fboscope(this);
   setColorAttachmentForFramebuffer(pin.color->id());
 

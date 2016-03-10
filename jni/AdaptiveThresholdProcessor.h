@@ -9,7 +9,7 @@ class AdaptiveThresholdProcessor final : public IImageProcessor
 {
 public:
   AdaptiveThresholdProcessor();
-  ~AdaptiveThresholdProcessor();
+  ~AdaptiveThresholdProcessor() = default;
   bool init(GLProgramManager* pm, int maxValue);
   ProcessorOutput process(const ProcessorInput& desc) override;
 

@@ -27,10 +27,6 @@ AdaptiveThresholdProcessor::AdaptiveThresholdProcessor()
 {
 }
 
-AdaptiveThresholdProcessor::~AdaptiveThresholdProcessor()
-{
-}
-
 bool
 AdaptiveThresholdProcessor::init(GLProgramManager* pm, int maxValue)
 {
@@ -118,12 +114,6 @@ AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
 ProcessorOutput
 AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
 {
-  static float positions[][4] = {
-    { -1.0, 1.0, 0.0, 1.0 },
-    { -1.0, -1.0, 0.0, 1.0 },
-    { 1.0, 1.0, 0.0, 1.0 },
-    { 1.0, -1.0, 0.0, 1.0 },
-  };
   ImageProcessorWorkflow* wf = pin.wf;
   FBOScope fboscope(wf);
   // zero for row blur, one for column blur
@@ -137,13 +127,10 @@ AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
 
   if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
     fprintf(stderr, "fbo is not completed %d, %x.\n", __LINE__,
-            glCheckFramebufferStatus(GL_FRAMEBUFFER));
+            wf->checkFramebuffer());
     exit(1);
   }
   GLint imageGeometry[2] = { pin.width, pin.height };
-  glVertexAttribPointer(m_vPositionIndexRow, 4, GL_FLOAT, GL_FALSE, 0,
-                        positions);
-  glEnableVertexAttribArray(m_vPositionIndexRow);
   glUseProgram(m_programRow);
   // setup uniforms
   glActiveTexture(GL_TEXTURE0);
@@ -161,11 +148,7 @@ AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
     fprintf(stderr, "fbo is not completed %d.\n", __LINE__);
     exit(1);
   }
-  glDisableVertexAttribArray(m_vPositionIndexRow);
 
-  glVertexAttribPointer(m_vPositionIndexColumn, 4, GL_FLOAT, GL_FALSE, 0,
-                        positions);
-  glEnableVertexAttribArray(m_vPositionIndexColumn);
   glUseProgram(m_programColumn);
   // setup uniforms
   glActiveTexture(GL_TEXTURE0);
@@ -177,10 +160,7 @@ AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
 
   glUniform4fv(m_uKernelColumn, s_block_size / 4, m_kernel.data());
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glDisableVertexAttribArray(m_vPositionIndexColumn);
   // render to screen
-
-  glEnableVertexAttribArray(m_vPositionIndexThreshold);
 
   glUseProgram(m_programThreshold);
   // setup uniforms
@@ -200,7 +180,6 @@ AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
     exit(1);
   }
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-  glDisableVertexAttribArray(m_vPositionIndexThreshold);
   checkError("image process");
   return ProcessorOutput{ tmpTexture[0] };
 }

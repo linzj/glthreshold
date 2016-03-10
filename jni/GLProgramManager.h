@@ -11,6 +11,8 @@ public:
     GAUSSIANROW,
     GAUSSIANCOLUMN,
     THRESHOLD,
+    DILATENONZEROROW,
+    DILATENONZEROCOLUMN,
   };
   GLProgramManager();
   ~GLProgramManager();

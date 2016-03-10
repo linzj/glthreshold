@@ -1,4 +1,5 @@
 #include "AdaptiveThresholdProcessor.h"
+#include "DilateNonZeroProcessor.h"
 #include "GLContextManager.h"
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
@@ -169,14 +170,21 @@ main(int argc, char** argv)
       printf("fails to initialize GLProgramManager instance.\n");
       return 1;
     }
-    std::unique_ptr<AdaptiveThresholdProcessor> processor(
+    ImageProcessorWorkflow wf;
+    std::unique_ptr<AdaptiveThresholdProcessor> adaptiveThresholdProcessor(
       new AdaptiveThresholdProcessor);
-    if (!processor->init(&pm, 211)) {
-      printf("fails to create image processor.\n");
+    if (!adaptiveThresholdProcessor->init(&pm, 211)) {
+      printf("fails to create image adaptiveThresholdProcessor.\n");
       return 1;
     }
-    ImageProcessorWorkflow wf;
-    wf.registerIImageProcessor(processor.release());
+    std::unique_ptr<DilateNonZeroProcessor> dilateNonZeroProcessor(
+      new DilateNonZeroProcessor);
+    if (!dilateNonZeroProcessor->init(&pm, 3, 3, 3)) {
+      printf("fails to create image dilateNonZeroProcessor.\n");
+      return 1;
+    }
+    wf.registerIImageProcessor(adaptiveThresholdProcessor.get());
+    wf.registerIImageProcessor(dilateNonZeroProcessor.get());
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
 

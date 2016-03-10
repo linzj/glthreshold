@@ -38,7 +38,7 @@ private:
   void preallocateTextures();
   void allocateTexture(GLuint texture, GLint width, GLint height, GLenum format,
                        void* data = nullptr);
-  std::vector<std::unique_ptr<IImageProcessor>> m_processors;
+  std::vector<IImageProcessor*> m_processors;
   std::vector<std::shared_ptr<GLTexture>> m_fbotextures;
   GLuint m_fbo;
   GLint m_width, m_height;

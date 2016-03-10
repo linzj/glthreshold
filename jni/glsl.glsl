@@ -57,3 +57,39 @@ void main(void)
     result = vec3(colorOrig > colorBlur ? u_maxValue : 0.0);
     gl_FragColor = vec4(result, 1.0);
 }
+---dilateNonZeroRowSource
+uniform ivec2 u_screenGeometry;
+uniform int u_kRowSize;
+uniform sampler2D u_texture;
+
+void main(void)
+{
+    highp vec2 texcoord = (gl_FragCoord.xy) /
+vec2(u_screenGeometry);
+    highp float toffset = 1.0 / float(u_screenGeometry.x);
+    highp vec4 m = vec4(0.0);
+    int j;
+
+    for (j = 0; j < u_kRowSize; ++j) {
+        m = max(m, texture2D(u_texture, texcoord + vec2(toffset * float(j), 0.0)));
+    }
+    gl_FragColor = m;
+}
+---dilateNonZeroColumnSource
+uniform ivec2 u_screenGeometry;
+uniform int u_kColumnSize;
+uniform sampler2D u_texture;
+
+void main(void)
+{
+    highp vec2 texcoord = (gl_FragCoord.xy) /
+vec2(u_screenGeometry);
+    highp float toffset = 1.0 / float(u_screenGeometry.y);
+    highp vec4 m = vec4(0.0);
+    int j;
+
+    for (j = 0; j < u_kColumnSize; ++j) {
+        m = max(m, texture2D(u_texture, texcoord + vec2(0.0, toffset * float(j))));
+    }
+    gl_FragColor = m;
+}

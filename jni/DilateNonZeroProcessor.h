@@ -1,27 +1,24 @@
 #ifndef DILATENONZEROPROCESSOR_H
 #define DILATENONZEROPROCESSOR_H
 #include "IImageProcessor.h"
-class DilateNoneZeroProcessor final : public IImageProcessor
+class GLProgramManager;
+
+class DilateNonZeroProcessor final : public IImageProcessor
 {
 public:
-  DilateNoneZeroProcessor();
-  ~DilateNoneZeroProcessor();
-  bool init(unsigned kwidth, unsigned kheight);
+  DilateNonZeroProcessor();
+  ~DilateNonZeroProcessor();
+  bool init(GLProgramManager* pm, unsigned kwidth, unsigned kheight,
+            unsigned iterations);
   ProcessorOutput process(const ProcessorInput& desc) override;
 
 private:
-  bool initProgram();
-  GLint m_vPositionIndexRowFirst;
-  GLint m_uTextureRowFirst;
-  GLint m_uScreenGeometryRowFirst;
-  GLint m_uKWidthRowFirst;
-  GLint m_programRowFirst;
-
-  GLint m_vPositionIndexRowSecond;
-  GLint m_uTextureRowSecond;
-  GLint m_uScreenGeometryRowSecond;
-  GLint m_uKWidthRowSecond;
-  GLint m_programRowSecond;
+  bool initProgram(GLProgramManager* pm);
+  GLint m_vPositionIndexRow;
+  GLint m_uTextureRow;
+  GLint m_uScreenGeometryRow;
+  GLint m_uKWidthRow;
+  GLint m_programRow;
 
   GLint m_vPositionIndexColumn;
   GLint m_uTextureColumn;

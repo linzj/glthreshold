@@ -4,6 +4,8 @@ extern "C" {
 extern const char* gaussianFragRowSource;
 extern const char* gaussianFragColumnSource;
 extern const char* thresholdFragSource;
+extern const char* dilateNonZeroRowSource;
+extern const char* dilateNonZeroColumnSource;
 }
 
 static inline const char**
@@ -27,6 +29,8 @@ getSourceMap()
     { GLProgramManager::GAUSSIANROW, &gaussianFragRowSource },
     { GLProgramManager::GAUSSIANCOLUMN, &gaussianFragColumnSource },
     { GLProgramManager::THRESHOLD, &thresholdFragSource },
+    { GLProgramManager::DILATENONZEROROW, &dilateNonZeroRowSource },
+    { GLProgramManager::DILATENONZEROCOLUMN, &dilateNonZeroColumnSource },
   };
   return g_map;
 }
