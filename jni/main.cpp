@@ -1,5 +1,6 @@
 #include "AdaptiveThresholdProcessor.h"
 #include "GLContextManager.h"
+#include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
 #include <memory>
 #include <nvImage.h>
@@ -163,9 +164,14 @@ main(int argc, char** argv)
   }
   {
     GLContextScope scope(glContextManager);
+    GLProgramManager pm;
+    if (!pm.init()) {
+      printf("fails to initialize GLProgramManager instance.\n");
+      return 1;
+    }
     std::unique_ptr<AdaptiveThresholdProcessor> processor(
       new AdaptiveThresholdProcessor);
-    if (!processor->init(211)) {
+    if (!processor->init(&pm, 211)) {
       printf("fails to create image processor.\n");
       return 1;
     }

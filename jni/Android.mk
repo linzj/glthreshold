@@ -24,10 +24,12 @@ GLContextManager.cpp \
 AdaptiveThresholdProcessor.cpp \
 ImageProcessorWorkflow.cpp \
 GLResources.cpp \
+GLCommon.cpp \
+GLProgramManager.cpp \
+glsl.glsl.c \
 nvImage/src/rgbe.c \
 nvImage/src/nvImage.cpp \
 nvImage/src/nvImagePng.cpp \
-glsl.glsl.c \
 libpng-1.2.51/png.c \
 libpng-1.2.51/pngerror.c \
 libpng-1.2.51/pnggccrd.c \

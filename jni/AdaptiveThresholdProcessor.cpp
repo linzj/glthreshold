@@ -1,4 +1,5 @@
 #include "AdaptiveThresholdProcessor.h"
+#include "GLProgramManager.h"
 #include "GLResources.h"
 #include "ImageProcessorWorkflow.h"
 #include <cmath>
@@ -28,23 +29,14 @@ AdaptiveThresholdProcessor::AdaptiveThresholdProcessor()
 
 AdaptiveThresholdProcessor::~AdaptiveThresholdProcessor()
 {
-  if (m_programRow) {
-    glDeleteProgram(m_programRow);
-  }
-  if (m_programColumn) {
-    glDeleteProgram(m_programColumn);
-  }
-  if (m_programThreshold) {
-    glDeleteProgram(m_programThreshold);
-  }
 }
 
 bool
-AdaptiveThresholdProcessor::init(int maxValue)
+AdaptiveThresholdProcessor::init(GLProgramManager* pm, int maxValue)
 {
   m_maxValue = maxValue;
   initGaussianBlurKernel();
-  return initProgram();
+  return initProgram(pm);
 }
 
 std::vector<GLfloat>
@@ -81,96 +73,11 @@ AdaptiveThresholdProcessor::initGaussianBlurKernel()
   m_kernel = std::move(getGaussianKernel(s_block_size));
 }
 
-extern "C" {
-extern const char* gaussianFragRowSource;
-extern const char* gaussianFragColumnSource;
-extern const char* thresholdFragSource;
-}
-
-/* report GL errors, if any, to stderr */
-static bool
-checkError(const char* functionName)
-{
-  GLenum error;
-  bool entered = false;
-  while ((error = glGetError()) != GL_NO_ERROR) {
-    fprintf(stderr, "GL error 0x%X detected in %s\n", error, functionName);
-    entered = true;
-  }
-  return !entered;
-}
-
-static void
-compileAndCheck(GLuint shader)
-{
-  GLint status;
-  glCompileShader(shader);
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-  if (status == GL_FALSE) {
-    GLint infoLogLength;
-    char* infoLog;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-    infoLog = (char*)malloc(infoLogLength);
-    glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog);
-    fprintf(stderr, "compile log: %s\n", infoLog);
-    free(infoLog);
-  }
-}
-
-static GLuint
-compileShaderSource(GLenum type, GLsizei count, char const** string)
-{
-  GLuint shader = glCreateShader(type);
-  glShaderSource(shader, count, string, NULL);
-  compileAndCheck(shader);
-  return shader;
-}
-
-static void
-linkAndCheck(GLuint program)
-{
-  GLint status;
-  glLinkProgram(program);
-  glGetProgramiv(program, GL_LINK_STATUS, &status);
-  if (status == GL_FALSE) {
-    GLint infoLogLength;
-    char* infoLog;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
-    infoLog = (char*)malloc(infoLogLength);
-    glGetProgramInfoLog(program, infoLogLength, NULL, infoLog);
-    fprintf(stderr, "link log: %s\n", infoLog);
-    free(infoLog);
-  }
-}
-
-static GLuint
-createProgram(GLuint vertexShader, GLuint fragmentShader)
-{
-  GLuint program = glCreateProgram();
-  if (vertexShader != 0) {
-    glAttachShader(program, vertexShader);
-  }
-  if (fragmentShader != 0) {
-    glAttachShader(program, fragmentShader);
-  }
-  linkAndCheck(program);
-  return program;
-}
-
 bool
-AdaptiveThresholdProcessor::initProgram()
+AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
 {
-  GLuint vertexShader =
-    compileShaderSource(GL_VERTEX_SHADER, 1, getVertexSourceLocation());
-
-  GLuint fragmentRowShader =
-    compileShaderSource(GL_FRAGMENT_SHADER, 1, &gaussianFragRowSource);
-
-  GLuint fragmentColumnShader =
-    compileShaderSource(GL_FRAGMENT_SHADER, 1, &gaussianFragColumnSource);
-
-  m_programRow = createProgram(vertexShader, fragmentRowShader);
-  m_programColumn = createProgram(vertexShader, fragmentColumnShader);
+  m_programRow = pm->getProgram(GLProgramManager::GAUSSIANROW);
+  m_programColumn = pm->getProgram(GLProgramManager::GAUSSIANCOLUMN);
   GLint program = m_programRow;
   m_vPositionIndexRow = glGetAttribLocation(program, "v_position");
   printf("m_vPositionIndexRow: %d.\n", m_vPositionIndexRow);
@@ -191,10 +98,7 @@ AdaptiveThresholdProcessor::initProgram()
          "%d.\n",
          m_uTextureColumn, m_uScreenGeometryColumn, m_uKernelColumn);
 
-  GLuint fragmentThreshold =
-    compileShaderSource(GL_FRAGMENT_SHADER, 1, &thresholdFragSource);
-  m_programThreshold = createProgram(vertexShader, fragmentThreshold);
-  glDeleteShader(fragmentThreshold);
+  m_programThreshold = pm->getProgram(GLProgramManager::THRESHOLD);
   program = m_programThreshold;
 
   m_vPositionIndexThreshold = glGetAttribLocation(program, "v_position");
@@ -208,10 +112,6 @@ AdaptiveThresholdProcessor::initProgram()
          "m_uScreenGeometryThreshold: %d, m_uMaxValueThreshold: %d.\n",
          m_uTextureOrigThreshold, m_uTextureBlurThreshold,
          m_uScreenGeometryThresholdg, m_uMaxValueThreshold);
-  // clean up
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentRowShader);
-  glDeleteShader(fragmentColumnShader);
   return checkError("initProgram");
 }
 

@@ -3,12 +3,14 @@
 #include "IImageProcessor.h"
 #include <vector>
 
+class GLProgramManager;
+
 class AdaptiveThresholdProcessor final : public IImageProcessor
 {
 public:
   AdaptiveThresholdProcessor();
   ~AdaptiveThresholdProcessor();
-  bool init(int maxValue);
+  bool init(GLProgramManager* pm, int maxValue);
   ProcessorOutput process(const ProcessorInput& desc) override;
 
 private:
@@ -37,7 +39,7 @@ private:
 
   static const GLint s_block_size = 92;
   void initGaussianBlurKernel();
-  bool initProgram();
+  bool initProgram(GLProgramManager* pm);
   static std::vector<GLfloat> getGaussianKernel(int n);
 };
 #endif /* ADAPTIVETHRESHOLDPROCESSOR_H */
