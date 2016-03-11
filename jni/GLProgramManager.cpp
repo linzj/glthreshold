@@ -1,14 +1,14 @@
 #include "GLProgramManager.h"
 
 extern "C" {
-extern const char* gaussianFragRowSource;
-extern const char* gaussianFragColumnSource;
-extern const char* adaptiveThresholdFragSource;
-extern const char* dilateNonZeroRowSource;
-extern const char* dilateNonZeroColumnSource;
-extern const char* erodeNonZeroRowSource;
-extern const char* erodeNonZeroColumnSource;
-extern const char* thresholdSource;
+extern const char* const gaussianFragRowSource;
+extern const char* const gaussianFragColumnSource;
+extern const char* const adaptiveThresholdFragSource;
+extern const char* const dilateNonZeroRowSource;
+extern const char* const dilateNonZeroColumnSource;
+extern const char* const erodeNonZeroRowSource;
+extern const char* const erodeNonZeroColumnSource;
+extern const char* const thresholdSource;
 }
 
 static inline const char**
@@ -23,7 +23,7 @@ getVertexSourceLocation()
 }
 
 namespace {
-typedef std::unordered_map<GLuint, const char**> SourceMap;
+typedef std::unordered_map<GLuint, const char* const*> SourceMap;
 
 static SourceMap
 getSourceMap()
@@ -134,8 +134,8 @@ GLProgramManager::getProgram(GLProgramManager::ProgramType programType)
   if (foundSource == sourceMap.end()) {
     return 0;
   }
-  GLuint fragShader =
-    compileShaderSource(GL_FRAGMENT_SHADER, 1, foundSource->second);
+  GLuint fragShader = compileShaderSource(
+    GL_FRAGMENT_SHADER, 1, const_cast<const char**>(foundSource->second));
   if (!fragShader) {
     return 0;
   }

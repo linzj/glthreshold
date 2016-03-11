@@ -52,12 +52,11 @@ libpng-1.2.51/pngwtran.c \
 libpng-1.2.51/pngwutil.c \
 
 GLSL_BINDING := \
-	jni/glsl.glsl.c
+	$(LOCAL_PATH)/glsl.glsl.c
 
-$(GLSL_BINDING): jni/glsl.glsl jni/updateglsl.py
+$(GLSL_BINDING): $(LOCAL_PATH)/glsl.glsl jni/updateglsl.py
 	python jni/updateglsl.py $<
 
-.PHONY: $(GLSL_BINDING)
 
 LOCAL_LDLIBS = -lz -lGLESv2 -lEGL
 include $(BUILD_EXECUTABLE)

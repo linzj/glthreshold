@@ -8,7 +8,7 @@ def handle_file(fileName):
        if not line.startswith('---'):
            break
        variableName = line[3:]
-       print >> outputFile, "const char* " + variableName + " ="
+       print >> outputFile, "const char* const " + variableName + " ="
        while True:
           line = inputFile.readline()
           if not line or line.startswith('---'):
