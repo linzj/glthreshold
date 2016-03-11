@@ -133,6 +133,7 @@ ImageProcessorWorkflow::rebornTexture(GLuint texture)
 
   m_fbotextures.push_back(
     std::move(std::unique_ptr<GLTexture>(new GLRebornTexture(texture, this))));
+  return true;
 }
 
 void
