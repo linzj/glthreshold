@@ -8,6 +8,8 @@
 #include <memory>
 #include <nvImage.h>
 #include <stdio.h>
+#define LOGE(tag, ...) \
+    fprintf(stderr, __VA_ARGS__)
 
 static nv::Image*
 gaussianLoadImageFromFile(const char* file)
@@ -69,7 +71,6 @@ CreateBMPFile(const char* pszFile, PBITMAPINFOHEADER pbi, const void* lpBits)
   PBITMAPINFOHEADER pbih; // bitmap info-header
   DWORD cb;               // incremental count of bytes
   const void* hp;         // byte pointer
-  DWORD dwTmp;
 
   pbih = (PBITMAPINFOHEADER)pbi;
 
@@ -173,34 +174,44 @@ main(int argc, char** argv)
       return 1;
     }
     ImageProcessorWorkflow wf;
-    std::unique_ptr<AdaptiveThresholdProcessor> adaptiveThresholdProcessor(
-      new AdaptiveThresholdProcessor);
-    if (!adaptiveThresholdProcessor->init(&pm, 211)) {
-      printf("fails to create image adaptiveThresholdProcessor.\n");
-      return 1;
+    std::unique_ptr<ThresholdProcessor> threshold(new ThresholdProcessor);
+    if (!threshold->init(&pm, 255, 80)) {
+      LOGE(LOG_TAG, "fails to create image thresholdProcessor.\n");
+      return false;
     }
-    std::unique_ptr<DilateNonZeroProcessor> dilateNonZeroProcessor(
-      new DilateNonZeroProcessor);
-    if (!dilateNonZeroProcessor->init(&pm, 3, 3, 3)) {
-      printf("fails to create image dilateNonZeroProcessor.\n");
-      return 1;
-    }
-    std::unique_ptr<ErodeNonZeroProcessor> erodeNonZeroProcessor(
+
+    std::unique_ptr<ErodeNonZeroProcessor> erode2time(
       new ErodeNonZeroProcessor);
-    if (!erodeNonZeroProcessor->init(&pm, 3, 3, 4)) {
-      printf("fails to create image erodeNonZeroProcessor.\n");
-      return 1;
+    if (!erode2time->init(&pm, 3, 3, 2)) {
+      LOGE(LOG_TAG, "fails to create image erodeNonZeroProcessor.\n");
+      return false;
     }
-    std::unique_ptr<ThresholdProcessor> thresholdProcessor(
-      new ThresholdProcessor);
-    if (!thresholdProcessor->init(&pm, 255, 80)) {
-      printf("fails to create image thresholdProcessor.\n");
-      return 1;
+
+    std::unique_ptr<ErodeNonZeroProcessor> erode10time(
+      new ErodeNonZeroProcessor);
+    if (!erode10time->init(&pm, 3, 3, 10)) {
+      LOGE(LOG_TAG, "fails to create image erodeNonZeroProcessor.\n");
+      return false;
     }
-    // wf.registerIImageProcessor(adaptiveThresholdProcessor.get());
-    // wf.registerIImageProcessor(dilateNonZeroProcessor.get());
-    // wf.registerIImageProcessor(erodeNonZeroProcessor.get());
-    wf.registerIImageProcessor(thresholdProcessor.get());
+
+    std::unique_ptr<DilateNonZeroProcessor> dilate2time(
+      new DilateNonZeroProcessor);
+    if (!dilate2time->init(&pm, 3, 3, 2)) {
+      LOGE(LOG_TAG, "fails to create image dilateNonZeroProcessor.\n");
+      return false;
+    }
+
+    std::unique_ptr<DilateNonZeroProcessor> dilate10time(
+      new DilateNonZeroProcessor);
+    if (!dilate10time->init(&pm, 3, 3, 10)) {
+      LOGE(LOG_TAG, "fails to create image dilateNonZeroProcessor.\n");
+      return false;
+    }
+    wf.registerIImageProcessor(threshold.get());
+    wf.registerIImageProcessor(dilate2time.get());
+    wf.registerIImageProcessor(erode2time.get());
+    wf.registerIImageProcessor(erode10time.get());
+    wf.registerIImageProcessor(dilate10time.get());
 
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
