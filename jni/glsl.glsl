@@ -103,7 +103,7 @@ void main(void)
     highp vec2 texcoord = (gl_FragCoord.xy - vec2(float(u_kRowSize / 2), 0.0)) /
 vec2(u_screenGeometry);
     highp float toffset = 1.0 / float(u_screenGeometry.x);
-    highp vec4 m = vec4(1.0);
+    highp vec4 m = vec4(0.9999999);
     int j;
 
     for (j = 0; j < u_kRowSize; ++j) {
@@ -121,7 +121,7 @@ void main(void)
     highp vec2 texcoord = (gl_FragCoord.xy + vec2(0.0, float(u_kColumnSize / 2 + 0))) /
 vec2(u_screenGeometry);
     highp float toffset = 1.0 / float(u_screenGeometry.y);
-    highp vec4 m = vec4(1.0);
+    highp vec4 m = vec4(0.9999999);
     int j;
 
     for (j = 0; j < u_kColumnSize; ++j) {
