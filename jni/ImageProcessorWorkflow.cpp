@@ -18,17 +18,29 @@ private:
 }
 
 ImageProcessorWorkflow::ImageProcessorWorkflow()
-  : m_width(0)
+  : m_fbo(0)
+  , m_width(0)
   , m_height(0)
+  , m_vbo(0)
   , m_staled(false)
 {
   glGenFramebuffers(1, &m_fbo);
+  glGenBuffers(1, &m_vbo);
+  static float positions[][4] = {
+    { -1.0, 1.0, 0.0, 1.0 },
+    { -1.0, -1.0, 0.0, 1.0 },
+    { 1.0, 1.0, 0.0, 1.0 },
+    { 1.0, -1.0, 0.0, 1.0 },
+  };
+  glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 }
 
 ImageProcessorWorkflow::~ImageProcessorWorkflow()
 {
   m_staled = true;
   glDeleteFramebuffers(1, &m_fbo);
+  glDeleteBuffers(1, &m_vbo);
 }
 
 void
@@ -48,20 +60,13 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   std::shared_ptr<GLTexture> scope(new GLTexture(texture));
 
   // save old viewport
-  GLint oldViewport[4];
-  glGetIntegerv(GL_VIEWPORT, oldViewport);
   glViewport(0, 0, m_width, m_height);
 
   ProcessorInput pin = { m_width, m_height, scope, this };
   scope.reset();
   preallocateTextures();
-  static float positions[][4] = {
-    { -1.0, 1.0, 0.0, 1.0 },
-    { -1.0, -1.0, 0.0, 1.0 },
-    { 1.0, 1.0, 0.0, 1.0 },
-    { 1.0, -1.0, 0.0, 1.0 },
-  };
-  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, positions);
+  glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(0);
   for (auto& p : m_processors) {
     ProcessorOutput pout = p->process(pin);
@@ -75,7 +80,6 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   std::unique_ptr<uint8_t[]> readback(new uint8_t[m_width * m_height * 4]);
   glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE,
                readback.get());
-  glViewport(oldViewport[0], oldViewport[1], oldViewport[2], oldViewport[3]);
   // mimic stale scope
   m_staled = true;
   m_fbotextures.clear();

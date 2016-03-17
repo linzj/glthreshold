@@ -8,8 +8,7 @@
 #include <memory>
 #include <nvImage.h>
 #include <stdio.h>
-#define LOGE(tag, ...) \
-    fprintf(stderr, __VA_ARGS__)
+#define LOGE(tag, ...) fprintf(stderr, __VA_ARGS__)
 
 static nv::Image*
 gaussianLoadImageFromFile(const char* file)

@@ -42,6 +42,7 @@ private:
   std::vector<std::shared_ptr<GLTexture>> m_fbotextures;
   GLuint m_fbo;
   GLint m_width, m_height;
+  GLuint m_vbo;
   bool m_staled;
 };
 
