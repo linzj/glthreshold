@@ -3,7 +3,6 @@
 #include "GLResources.h"
 #include "ImageProcessorWorkflow.h"
 #include <cmath>
-#include <stdio.h>
 #include <stdlib.h>
 
 AdaptiveThresholdProcessor::AdaptiveThresholdProcessor()
@@ -75,17 +74,19 @@ AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
   m_uTextureRow = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryRow = glGetUniformLocation(program, "u_screenGeometry");
   m_uKernelRow = glGetUniformLocation(program, "u_kernel");
-  printf("m_uTextureRow: %d, m_uScreenGeometryRow: %d, m_uKernelRow: %d.\n",
-         m_uTextureRow, m_uScreenGeometryRow, m_uKernelRow);
+  GLIMPROC_LOGI(
+    "m_uTextureRow: %d, m_uScreenGeometryRow: %d, m_uKernelRow: %d.\n",
+    m_uTextureRow, m_uScreenGeometryRow, m_uKernelRow);
 
   program = m_programColumn;
 
   m_uTextureColumn = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryColumn = glGetUniformLocation(program, "u_screenGeometry");
   m_uKernelColumn = glGetUniformLocation(program, "u_kernel");
-  printf("m_uTextureColumn: %d, m_uScreenGeometryColumn: %d, m_uKernelColumn: "
-         "%d.\n",
-         m_uTextureColumn, m_uScreenGeometryColumn, m_uKernelColumn);
+  GLIMPROC_LOGI(
+    "m_uTextureColumn: %d, m_uScreenGeometryColumn: %d, m_uKernelColumn: "
+    "%d.\n",
+    m_uTextureColumn, m_uScreenGeometryColumn, m_uKernelColumn);
 
   m_programThreshold = pm->getProgram(GLProgramManager::ADAPTIVETHRESHOLD);
   program = m_programThreshold;
@@ -95,10 +96,10 @@ AdaptiveThresholdProcessor::initProgram(GLProgramManager* pm)
   m_uScreenGeometryThresholdg =
     glGetUniformLocation(program, "u_screenGeometry");
   m_uMaxValueThreshold = glGetUniformLocation(program, "u_maxValue");
-  printf("m_uTextureOrigThreshold: %d, m_uTextureBlurThreshold: %d, "
-         "m_uScreenGeometryThreshold: %d, m_uMaxValueThreshold: %d.\n",
-         m_uTextureOrigThreshold, m_uTextureBlurThreshold,
-         m_uScreenGeometryThresholdg, m_uMaxValueThreshold);
+  GLIMPROC_LOGI("m_uTextureOrigThreshold: %d, m_uTextureBlurThreshold: %d, "
+                "m_uScreenGeometryThreshold: %d, m_uMaxValueThreshold: %d.\n",
+                m_uTextureOrigThreshold, m_uTextureBlurThreshold,
+                m_uScreenGeometryThresholdg, m_uMaxValueThreshold);
   return checkError("initProgram");
 }
 
@@ -117,8 +118,8 @@ AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
   wf->setColorAttachmentForFramebuffer(tmpTexture[0]->id());
 
   if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
-    fprintf(stderr, "fbo is not completed %d, %x.\n", __LINE__,
-            wf->checkFramebuffer());
+    GLIMPROC_LOGE("fbo is not completed %d, %x.\n", __LINE__,
+                  wf->checkFramebuffer());
     exit(1);
   }
   GLint imageGeometry[2] = { pin.width, pin.height };
@@ -136,7 +137,7 @@ AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
   // bind fbo and complete it.
   wf->setColorAttachmentForFramebuffer(tmpTexture[1]->id());
   if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
-    fprintf(stderr, "fbo is not completed %d.\n", __LINE__);
+    GLIMPROC_LOGE("fbo is not completed %d.\n", __LINE__);
     exit(1);
   }
 
@@ -167,7 +168,7 @@ AdaptiveThresholdProcessor::process(const ProcessorInput& pin)
 
   wf->setColorAttachmentForFramebuffer(tmpTexture[0]->id());
   if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
-    fprintf(stderr, "fbo is not completed %d.\n", __LINE__);
+    GLIMPROC_LOGE("fbo is not completed %d.\n", __LINE__);
     exit(1);
   }
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

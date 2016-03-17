@@ -49,6 +49,7 @@ GLProgramManager::GLProgramManager()
 
 GLProgramManager::~GLProgramManager()
 {
+  CHECK_CONTEXT_NOT_NULL();
   for (auto p : m_programs) {
     glDeleteProgram(p.second);
   }
@@ -67,7 +68,7 @@ compileAndCheck(GLuint shader)
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
     infoLog = (char*)malloc(infoLogLength);
     glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog);
-    fprintf(stderr, "compile log: %s\n", infoLog);
+    GLIMPROC_LOGE("compile log: %s\n", infoLog);
     free(infoLog);
     return false;
   }
@@ -98,7 +99,7 @@ linkAndCheck(GLuint program)
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &infoLogLength);
     infoLog = (char*)malloc(infoLogLength);
     glGetProgramInfoLog(program, infoLogLength, NULL, infoLog);
-    fprintf(stderr, "link log: %s\n", infoLog);
+    GLIMPROC_LOGE("link log: %s\n", infoLog);
     free(infoLog);
     return false;
   }

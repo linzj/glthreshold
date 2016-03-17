@@ -7,8 +7,7 @@
 #include "ThresholdProcessor.h"
 #include <memory>
 #include <nvImage.h>
-#include <stdio.h>
-#define LOGE(tag, ...) fprintf(stderr, __VA_ARGS__)
+#define LOGE(tag, ...) GLIMPROC_LOGE(__VA_ARGS__)
 
 static nv::Image*
 gaussianLoadImageFromFile(const char* file)
@@ -76,7 +75,7 @@ CreateBMPFile(const char* pszFile, PBITMAPINFOHEADER pbi, const void* lpBits)
   // Create the .BMP file.
   hf = fopen(pszFile, "wb");
   if (hf == nullptr)
-    fprintf(stderr, "fails to create file.\n");
+    GLIMPROC_LOGE("fails to create file.\n");
   hdr.bfType = 0x4d42; // 0x42 = "B" 0x4d = "M"
   // Compute the size of the entire file.
   hdr.bfSize = (DWORD)(sizeof(BITMAPFILEHEADER) + pbih->biSize +
@@ -90,19 +89,19 @@ CreateBMPFile(const char* pszFile, PBITMAPINFOHEADER pbi, const void* lpBits)
 
   // Copy the BITMAPFILEHEADER into the .BMP file.
   if (1 != fwrite((LPVOID)&hdr, sizeof(BITMAPFILEHEADER), 1, hf)) {
-    fprintf(stderr, "fails to write file: header.\n");
+    GLIMPROC_LOGE("fails to write file: header.\n");
   }
 
   // Copy the BITMAPINFOHEADER and RGBQUAD array into the file.
   if (1 != fwrite((LPVOID)pbih,
                   sizeof(BITMAPINFOHEADER) + pbih->biClrUsed * sizeof(RGBQUAD),
                   1, hf))
-    fprintf(stderr, "fails to write file info header.\n");
+    GLIMPROC_LOGE("fails to write file info header.\n");
   cb = pbih->biSizeImage;
   // Copy the array of color indices into the .BMP file.
   hp = lpBits;
   if (cb != fwrite((LPSTR)hp, 1, (int)cb, hf))
-    fprintf(stderr, "fails to write file: pixels.\n");
+    GLIMPROC_LOGE("fails to write file: pixels.\n");
 
   // Close the .BMP file.
   fclose(hf);

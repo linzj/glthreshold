@@ -1,6 +1,6 @@
 #ifndef GLRESOURCES_H
 #define GLRESOURCES_H
-#include <GLES2/gl2.h>
+#include "GLCommon.h"
 
 class GLTexture
 {

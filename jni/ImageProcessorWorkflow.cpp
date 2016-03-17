@@ -1,7 +1,6 @@
 #include "ImageProcessorWorkflow.h"
 #include "GLResources.h"
 #include "IImageProcessor.h"
-#include <stdio.h>
 
 static const int s_preallocateTextureCount = 3;
 
@@ -24,6 +23,7 @@ ImageProcessorWorkflow::ImageProcessorWorkflow()
   , m_vbo(0)
   , m_staled(false)
 {
+  CHECK_CONTEXT_NOT_NULL();
   glGenFramebuffers(1, &m_fbo);
   glGenBuffers(1, &m_vbo);
   static float positions[][4] = {
@@ -39,6 +39,7 @@ ImageProcessorWorkflow::ImageProcessorWorkflow()
 ImageProcessorWorkflow::~ImageProcessorWorkflow()
 {
   m_staled = true;
+  CHECK_CONTEXT_NOT_NULL();
   glDeleteFramebuffers(1, &m_fbo);
   glDeleteBuffers(1, &m_vbo);
 }
@@ -55,6 +56,8 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   m_width = desc.width;
   m_height = desc.height;
   GLuint texture;
+
+  CHECK_CONTEXT_NOT_NULL();
   glGenTextures(1, &texture);
   allocateTexture(texture, m_width, m_height, desc.format, desc.data);
   std::shared_ptr<GLTexture> scope(new GLTexture(texture));
@@ -111,6 +114,7 @@ ImageProcessorWorkflow::requestTextureForFramebuffer()
 {
   if (m_fbotextures.empty()) {
     GLuint texture;
+    CHECK_CONTEXT_NOT_NULL();
     glGenTextures(1, &texture);
     allocateTexture(texture, m_width, m_height, GL_RGBA);
     std::shared_ptr<GLTexture> resource(new GLRebornTexture(texture, this));
@@ -157,6 +161,8 @@ void
 ImageProcessorWorkflow::preallocateTextures()
 {
   GLuint textures[s_preallocateTextureCount];
+
+  CHECK_CONTEXT_NOT_NULL();
   glGenTextures(s_preallocateTextureCount, textures);
   m_fbotextures.reserve(s_preallocateTextureCount);
   for (int i = 0; i < s_preallocateTextureCount; ++i) {

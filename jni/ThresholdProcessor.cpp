@@ -36,8 +36,8 @@ ThresholdProcessor::process(const ProcessorInput& pin)
   wf->setColorAttachmentForFramebuffer(tmpTexture[0]->id());
 
   if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
-    fprintf(stderr, "fbo is not completed %d, %x.\n", __LINE__,
-            wf->checkFramebuffer());
+    GLIMPROC_LOGE("fbo is not completed %d, %x.\n", __LINE__,
+                  wf->checkFramebuffer());
     exit(1);
   }
   GLint imageGeometry[2] = { pin.width, pin.height };
@@ -67,8 +67,8 @@ ThresholdProcessor::initProgram(GLProgramManager* pm)
   m_uScreenGeometry = glGetUniformLocation(program, "u_screenGeometry");
   m_uMaxValue = glGetUniformLocation(program, "u_maxValue");
   m_uThreshold = glGetUniformLocation(program, "u_threshold");
-  printf("m_uTexture: %d, m_uScreenGeometry: %d, m_uMaxValue: %d, "
-         "m_uThreshold: %d.\n",
-         m_uTexture, m_uScreenGeometry, m_uMaxValue, m_uThreshold);
+  GLIMPROC_LOGI("m_uTexture: %d, m_uScreenGeometry: %d, m_uMaxValue: %d, "
+                "m_uThreshold: %d.\n",
+                m_uTexture, m_uScreenGeometry, m_uMaxValue, m_uThreshold);
   return true;
 }

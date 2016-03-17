@@ -46,8 +46,8 @@ DilateNonZeroProcessor::process(const ProcessorInput& pin)
   wf->setColorAttachmentForFramebuffer(tmpTexture[0]->id());
 
   if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
-    fprintf(stderr, "fbo is not completed %d, %x.\n", __LINE__,
-            wf->checkFramebuffer());
+    GLIMPROC_LOGE("fbo is not completed %d, %x.\n", __LINE__,
+                  wf->checkFramebuffer());
     exit(1);
   }
   GLint imageGeometry[2] = { pin.width, pin.height };
@@ -66,7 +66,7 @@ DilateNonZeroProcessor::process(const ProcessorInput& pin)
   // bind fbo and complete it.
   wf->setColorAttachmentForFramebuffer(tmpTexture[1]->id());
   if (GL_FRAMEBUFFER_COMPLETE != wf->checkFramebuffer()) {
-    fprintf(stderr, "fbo is not completed %d.\n", __LINE__);
+    GLIMPROC_LOGE("fbo is not completed %d.\n", __LINE__);
     exit(1);
   }
 
@@ -96,15 +96,17 @@ DilateNonZeroProcessor::initProgram(GLProgramManager* pm)
   m_uTextureRow = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryRow = glGetUniformLocation(program, "u_screenGeometry");
   m_uKWidthRow = glGetUniformLocation(program, "u_kRowSize");
-  printf("m_uTextureRow: %d, m_uScreenGeometryRow: %d, m_uKWidthRow: %d.\n",
-         m_uTextureRow, m_uScreenGeometryRow, m_uKWidthRow);
+  GLIMPROC_LOGI(
+    "m_uTextureRow: %d, m_uScreenGeometryRow: %d, m_uKWidthRow: %d.\n",
+    m_uTextureRow, m_uScreenGeometryRow, m_uKWidthRow);
 
   program = m_programColumn;
   m_uTextureColumn = glGetUniformLocation(program, "u_texture");
   m_uScreenGeometryColumn = glGetUniformLocation(program, "u_screenGeometry");
   m_uKHeightColumn = glGetUniformLocation(program, "u_kColumnSize");
-  printf("m_uTextureColumn: %d, m_uScreenGeometryColumn: %d, m_uKHeightColumn: "
-         "%d.\n",
-         m_uTextureColumn, m_uScreenGeometryColumn, m_uKHeightColumn);
+  GLIMPROC_LOGI(
+    "m_uTextureColumn: %d, m_uScreenGeometryColumn: %d, m_uKHeightColumn: "
+    "%d.\n",
+    m_uTextureColumn, m_uScreenGeometryColumn, m_uKHeightColumn);
   return true;
 }

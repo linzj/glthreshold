@@ -17,9 +17,11 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_CXXFLAGS += -std=c++11
-LOCAL_CFLAGS += -I$(LOCAL_PATH)/nvImage/include -I$(LOCAL_PATH)/libpng-1.2.51 -O2 -Wall
+LOCAL_CFLAGS += -I$(LOCAL_PATH)/nvImage/include -I$(LOCAL_PATH)/libpng-1.2.51 -O2 -Wall \
+				-DANDROID_LOGCAT_ENABLED
 LOCAL_MODULE    := glthreshold
 LOCAL_SRC_FILES := main.cpp \
+log.cpp \
 GLContextManager.cpp \
 AdaptiveThresholdProcessor.cpp \
 ThresholdProcessor.cpp \
@@ -58,5 +60,5 @@ $(GLSL_BINDING): $(LOCAL_PATH)/glsl.glsl jni/updateglsl.py
 	python jni/updateglsl.py $<
 
 
-LOCAL_LDLIBS = -lz -lGLESv2 -lEGL
+LOCAL_LDLIBS = -lz -lGLESv2 -lEGL -llog
 include $(BUILD_EXECUTABLE)
