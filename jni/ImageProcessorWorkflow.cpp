@@ -89,6 +89,8 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   m_width = 0;
   m_height = 0;
   m_staled = false;
+  // clean up state.
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
   return ImageOutput{ std::move(readback) };
 }
 
