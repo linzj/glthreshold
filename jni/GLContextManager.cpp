@@ -1,5 +1,6 @@
 #include "GLContextManager.h"
-#include <GLES2/gl2.h>
+#include "GLCommon.h"
+#define EGL_OPENGL_ES3_BIT_KHR            0x00000040
 
 GLContextManager::GLContextManager()
   : m_dpy(EGL_NO_DISPLAY)

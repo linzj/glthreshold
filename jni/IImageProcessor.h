@@ -1,6 +1,6 @@
 #ifndef IIMAGEPROCESSOR_H
 #define IIMAGEPROCESSOR_H
-#include <GLES2/gl2.h>
+#include "GLCommon.h"
 #include <memory>
 #include <stdint.h>
 
