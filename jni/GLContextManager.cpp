@@ -1,6 +1,6 @@
 #include "GLContextManager.h"
 #include "GLCommon.h"
-#define EGL_OPENGL_ES3_BIT_KHR            0x00000040
+#define EGL_OPENGL_ES3_BIT_KHR 0x00000040
 
 GLContextManager::GLContextManager()
   : m_dpy(EGL_NO_DISPLAY)
@@ -84,6 +84,9 @@ GLContextScope::GLContextScope(GLContextManager& manager)
   m_prevSurfaceRead = eglGetCurrentSurface(EGL_READ);
   eglMakeCurrent(m_dpy, manager.m_surface, manager.m_surface,
                  manager.m_context);
+  GLIMPROC_LOGI("glversion: %s, vender: %s, renderer: %s.\n",
+                glGetString(GL_VERSION), glGetString(GL_VENDOR),
+                glGetString(GL_RENDERER));
 }
 
 GLContextScope::~GLContextScope()

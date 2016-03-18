@@ -9,16 +9,12 @@ extern const char* const dilateNonZeroColumnSource;
 extern const char* const erodeNonZeroRowSource;
 extern const char* const erodeNonZeroColumnSource;
 extern const char* const thresholdSource;
+extern const char* const vertexShaderSource;
 }
 
 static inline const char**
 getVertexSourceLocation()
 {
-  static const char* vertexShaderSource = "attribute vec4 v_position;\n"
-                                          "void main()\n"
-                                          "{\n"
-                                          "   gl_Position = v_position;\n"
-                                          "}\n";
   return &vertexShaderSource;
 }
 

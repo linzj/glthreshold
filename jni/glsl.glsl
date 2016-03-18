@@ -142,3 +142,9 @@ vec2(u_screenGeometry);
     highp float rcolor = texture2D(u_texture, texcoord).r;
     gl_FragColor = vec4(rcolor > u_threshold ? u_maxValue : 0.0);
 }
+---vertexShaderSource
+attribute vec4 v_position;
+void main()
+{
+   gl_Position = v_position;
+}
