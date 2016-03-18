@@ -205,11 +205,18 @@ main(int argc, char** argv)
       LOGE(LOG_TAG, "fails to create image dilateNonZeroProcessor.\n");
       return false;
     }
-    wf.registerIImageProcessor(threshold.get());
-    wf.registerIImageProcessor(dilate2time.get());
-    wf.registerIImageProcessor(erode2time.get());
-    wf.registerIImageProcessor(erode10time.get());
-    wf.registerIImageProcessor(dilate10time.get());
+    std::unique_ptr<AdaptiveThresholdProcessor> adaptive(
+      new AdaptiveThresholdProcessor);
+    if (!adaptive->init(&pm, 255)) {
+      LOGE(LOG_TAG, "fails to create image AdaptiveThresholdProcessor.\n");
+      return false;
+    }
+    wf.registerIImageProcessor(adaptive.get());
+    // wf.registerIImageProcessor(threshold.get());
+    // wf.registerIImageProcessor(dilate2time.get());
+    // wf.registerIImageProcessor(erode2time.get());
+    // wf.registerIImageProcessor(erode10time.get());
+    // wf.registerIImageProcessor(dilate10time.get());
 
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
