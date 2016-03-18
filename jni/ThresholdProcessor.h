@@ -14,7 +14,6 @@ public:
 
 private:
   GLint m_uTexture;
-  GLint m_uScreenGeometry;
   GLint m_uMaxValue;
   GLint m_uThreshold;
   GLint m_program;

@@ -58,92 +58,90 @@ void main(void)
     gl_FragColor = vec4(result, 1.0);
 }
 ---dilateNonZeroRowSource
-uniform highp ivec2 u_screenGeometry;
-uniform int u_kRowSize;
+#version 300 es
+uniform highp int u_kRowSize;
 uniform sampler2D u_texture;
+layout(location = 0) out highp vec4 outputColor;
 
 void main(void)
 {
-    highp vec2 texcoord = (gl_FragCoord.xy - vec2(float(u_kRowSize / 2), 0.0)) /
-vec2(u_screenGeometry);
-    highp float toffset = 1.0 / float(u_screenGeometry.x);
+    highp ivec2 texcoord = (ivec2(gl_FragCoord.xy) - ivec2(u_kRowSize / 2, 0));
     highp vec4 m = vec4(0.0);
     int j;
 
     for (j = 0; j < u_kRowSize; ++j) {
-        m = max(m, texture2D(u_texture, texcoord + vec2(toffset * float(j), 0.0)));
+        m = max(m, texelFetch(u_texture, texcoord + ivec2(j, 0), 0));
     }
-    gl_FragColor = m;
+    outputColor = m;
 }
 ---dilateNonZeroColumnSource
-uniform highp ivec2 u_screenGeometry;
-uniform int u_kColumnSize;
+#version 300 es
+uniform highp int u_kColumnSize;
 uniform sampler2D u_texture;
+layout(location = 0) out highp vec4 outputColor;
 
 void main(void)
 {
-    highp vec2 texcoord = (gl_FragCoord.xy + vec2(0.0, float(u_kColumnSize / 2 + 0))) /
-vec2(u_screenGeometry);
-    highp float toffset = 1.0 / float(u_screenGeometry.y);
+    highp ivec2 texcoord = (ivec2(gl_FragCoord.xy) + ivec2(0, u_kColumnSize / 2));
     highp vec4 m = vec4(0.0);
     int j;
 
     for (j = 0; j < u_kColumnSize; ++j) {
-        m = max(m, texture2D(u_texture, texcoord - vec2(0.0, toffset * float(j))));
+        m = max(m, texelFetch(u_texture, texcoord - ivec2(0, j), 0));
     }
-    gl_FragColor = m;
+    outputColor = m;
 }
 ---erodeNonZeroRowSource
-uniform highp ivec2 u_screenGeometry;
-uniform int u_kRowSize;
+#version 300 es
+uniform highp int u_kRowSize;
 uniform sampler2D u_texture;
+layout(location = 0) out highp vec4 outputColor;
 
 void main(void)
 {
-    highp vec2 texcoord = (gl_FragCoord.xy - vec2(float(u_kRowSize / 2), 0.0)) /
-vec2(u_screenGeometry);
-    highp float toffset = 1.0 / float(u_screenGeometry.x);
+    highp ivec2 texcoord = (ivec2(gl_FragCoord.xy) - ivec2(u_kRowSize / 2, 0));
     highp vec4 m = vec4(0.9999999);
     int j;
 
     for (j = 0; j < u_kRowSize; ++j) {
-        m = min(m, texture2D(u_texture, texcoord + vec2(toffset * float(j), 0.0)));
+        m = min(m, texelFetch(u_texture, texcoord + ivec2(j, 0), 0));
     }
-    gl_FragColor = m;
+    outputColor = m;
 }
 ---erodeNonZeroColumnSource
-uniform highp ivec2 u_screenGeometry;
-uniform int u_kColumnSize;
+#version 300 es
+uniform highp int u_kColumnSize;
 uniform sampler2D u_texture;
+layout(location = 0) out highp vec4 outputColor;
 
 void main(void)
 {
-    highp vec2 texcoord = (gl_FragCoord.xy + vec2(0.0, float(u_kColumnSize / 2 + 0))) /
-vec2(u_screenGeometry);
-    highp float toffset = 1.0 / float(u_screenGeometry.y);
+    highp ivec2 texcoord = (ivec2(gl_FragCoord.xy) + ivec2(0, u_kColumnSize / 2 ));
     highp vec4 m = vec4(0.9999999);
     int j;
 
     for (j = 0; j < u_kColumnSize; ++j) {
-        m = min(m, texture2D(u_texture, texcoord - vec2(0.0, toffset * float(j))));
+        m = min(m, texelFetch(u_texture, texcoord - ivec2(0, j), 0));
     }
-    gl_FragColor = m;
+    outputColor = m;
 }
 ---thresholdSource
-uniform ivec2 u_screenGeometry;
+#version 300 es
 uniform mediump float u_maxValue;
 uniform mediump float u_threshold;
 uniform sampler2D u_texture;
+layout(location = 0) out highp vec4 outputColor;
 
 void main(void)
 {
-    highp vec2 texcoord = (gl_FragCoord.xy + vec2(0.0, 3.0)) /
-vec2(u_screenGeometry);
-    highp float rcolor = texture2D(u_texture, texcoord).r;
-    gl_FragColor = vec4(rcolor > u_threshold ? u_maxValue : 0.0);
+    highp ivec2 texcoord = ivec2(gl_FragCoord.xy);
+    highp float rcolor = texelFetch(u_texture, texcoord, 0).r;
+    outputColor = vec4(rcolor > u_threshold ? u_maxValue : 0.0);
 }
 ---vertexShaderSource
-attribute vec4 v_position;
+#version 300 es
+layout(location = 0) in mediump vec4 v_position;
+
 void main()
 {
    gl_Position = v_position;

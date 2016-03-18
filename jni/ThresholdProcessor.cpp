@@ -6,7 +6,6 @@
 
 ThresholdProcessor::ThresholdProcessor()
   : m_uTexture(0)
-  , m_uScreenGeometry(0)
   , m_uMaxValue(0)
   , m_uThreshold(0)
   , m_program(0)
@@ -40,14 +39,12 @@ ThresholdProcessor::process(const ProcessorInput& pin)
                   wf->checkFramebuffer());
     exit(1);
   }
-  GLint imageGeometry[2] = { pin.width, pin.height };
   glUseProgram(m_program);
   // setup uniforms
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, pin.color->id());
   glUniform1i(m_uTexture, 0);
 
-  glUniform2iv(m_uScreenGeometry, 1, imageGeometry);
   // setup kernel and block size
 
   glUniform1f(m_uMaxValue, static_cast<GLfloat>(m_maxValue) / 255.0f);
@@ -64,11 +61,10 @@ ThresholdProcessor::initProgram(GLProgramManager* pm)
     return false;
   GLint program = m_program;
   m_uTexture = glGetUniformLocation(program, "u_texture");
-  m_uScreenGeometry = glGetUniformLocation(program, "u_screenGeometry");
   m_uMaxValue = glGetUniformLocation(program, "u_maxValue");
   m_uThreshold = glGetUniformLocation(program, "u_threshold");
-  GLIMPROC_LOGI("m_uTexture: %d, m_uScreenGeometry: %d, m_uMaxValue: %d, "
+  GLIMPROC_LOGI("m_uTexture: %d, m_uMaxValue: %d, "
                 "m_uThreshold: %d.\n",
-                m_uTexture, m_uScreenGeometry, m_uMaxValue, m_uThreshold);
+                m_uTexture, m_uMaxValue, m_uThreshold);
   return true;
 }
