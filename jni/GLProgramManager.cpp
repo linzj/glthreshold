@@ -15,7 +15,7 @@ extern const char* const vertexShaderSource;
 static inline const char**
 getVertexSourceLocation()
 {
-  return &vertexShaderSource;
+  return const_cast<const char**>(&vertexShaderSource);
 }
 
 namespace {
