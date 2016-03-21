@@ -8,6 +8,11 @@
 #include <memory>
 #include <nvImage.h>
 #define LOGE(tag, ...) GLIMPROC_LOGE(__VA_ARGS__)
+#if defined(ANDROID)
+#define BITMAP_PATH "/sdcard/shit.bmp"
+#else
+#define BITMAP_PATH "shit.bmp"
+#endif
 
 static nv::Image*
 gaussianLoadImageFromFile(const char* file)
@@ -211,12 +216,12 @@ main(int argc, char** argv)
       LOGE(LOG_TAG, "fails to create image AdaptiveThresholdProcessor.\n");
       return false;
     }
-    wf.registerIImageProcessor(adaptive.get());
-    // wf.registerIImageProcessor(threshold.get());
-    // wf.registerIImageProcessor(dilate2time.get());
-    // wf.registerIImageProcessor(erode2time.get());
-    // wf.registerIImageProcessor(erode10time.get());
-    // wf.registerIImageProcessor(dilate10time.get());
+    // wf.registerIImageProcessor(adaptive.get());
+    wf.registerIImageProcessor(threshold.get());
+    wf.registerIImageProcessor(dilate2time.get());
+    wf.registerIImageProcessor(erode2time.get());
+    wf.registerIImageProcessor(erode10time.get());
+    wf.registerIImageProcessor(dilate10time.get());
 
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
@@ -245,7 +250,7 @@ main(int argc, char** argv)
         rowp[2] = *procp;
       }
     }
-    saveBitmap(desc.width, desc.height, "/sdcard/shit.bmp",
+    saveBitmap(desc.width, desc.height, "shit.bmp",
                reinterpret_cast<char*>(saveBits.get()));
 
     printf("one frame: %lf.\n", ((double)(t2.tv_sec - t1.tv_sec) +
