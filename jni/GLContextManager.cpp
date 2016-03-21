@@ -69,6 +69,39 @@ GLContextManager::init()
   m_dpy = dpy;
   m_context = ctx;
   m_surface = surface;
+  bool initGL3Success;
+  {
+    GLContextScope scope(*this);
+    GLIMPROC_LOGI("glversion: %s, vender: %s, renderer: %s.\n",
+                  glGetString(GL_VERSION), glGetString(GL_VENDOR),
+                  glGetString(GL_RENDERER));
+    initGL3Success = initGL3Interfaces();
+  }
+  if (!initGL3Success) {
+    eglDestroySurface(dpy, surface);
+    eglDestroyContext(dpy, ctx);
+    // stop the duplicate clean up in destructor.
+    m_dpy = EGL_NO_DISPLAY;
+  }
+  return true;
+}
+
+#define INIT_GL_FUNC_OR_RETURN_FALSE(name)                                     \
+  __typeof__(static_cast<GL3Interfaces*>(nullptr)->name) name =                \
+    reinterpret_cast<__typeof__(static_cast<GL3Interfaces*>(nullptr)->name)>(  \
+      eglGetProcAddress(#name));                                               \
+  if (name == nullptr) {                                                       \
+    GLIMPROC_LOGE(                                                             \
+      "GLContextManager::initGL3Interfaces: eglGetProcAddress " #name          \
+      " failed.\n");                                                           \
+    return false;                                                              \
+  }                                                                            \
+  m_interfaces.name = name
+
+bool
+GLContextManager::initGL3Interfaces()
+{
+  INIT_GL_FUNC_OR_RETURN_FALSE(glCreateShaderProgramv);
   return true;
 }
 
@@ -84,9 +117,6 @@ GLContextScope::GLContextScope(GLContextManager& manager)
   m_prevSurfaceRead = eglGetCurrentSurface(EGL_READ);
   eglMakeCurrent(m_dpy, manager.m_surface, manager.m_surface,
                  manager.m_context);
-  GLIMPROC_LOGI("glversion: %s, vender: %s, renderer: %s.\n",
-                glGetString(GL_VERSION), glGetString(GL_VENDOR),
-                glGetString(GL_RENDERER));
 }
 
 GLContextScope::~GLContextScope()

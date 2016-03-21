@@ -49,10 +49,6 @@ libpng-1.2.51/pngwutil.o \
 CXX_SOURCES := main.cpp \
 log.cpp \
 GLContextManager.cpp \
-AdaptiveThresholdProcessor.cpp \
-ThresholdProcessor.cpp \
-DilateNonZeroProcessor.cpp \
-ErodeNonZeroProcessor.cpp \
 ImageProcessorWorkflow.cpp \
 GLResources.cpp \
 GLCommon.cpp \

@@ -2,29 +2,22 @@
 #define GLPROGRAMMANAGER_H
 #include "GLCommon.h"
 #include <unordered_map>
+class GL3Interfaces;
 
 class GLProgramManager
 {
 public:
   enum ProgramType
   {
-    GAUSSIANROW,
-    GAUSSIANCOLUMN,
-    ADAPTIVETHRESHOLD,
-    DILATENONZEROROW,
-    DILATENONZEROCOLUMN,
-    ERODENONZEROROW,
-    ERODENONZEROCOLUMN,
-    THRESHOLD,
+    BINARIZERSUM,
   };
-  GLProgramManager();
+  explicit GLProgramManager(const GL3Interfaces& interfaces);
   ~GLProgramManager();
-  bool init();
   GLuint getProgram(ProgramType programType);
 
 private:
   std::unordered_map<GLuint, GLuint> m_programs;
-  GLuint m_vertexShader;
+  const GL3Interfaces& m_interfaces;
 };
 
 #endif /* GLPROGRAMMANAGER_H */

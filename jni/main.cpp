@@ -1,10 +1,6 @@
-#include "AdaptiveThresholdProcessor.h"
-#include "DilateNonZeroProcessor.h"
-#include "ErodeNonZeroProcessor.h"
 #include "GLContextManager.h"
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
-#include "ThresholdProcessor.h"
 #include <memory>
 #include <nvImage.h>
 #define LOGE(tag, ...) GLIMPROC_LOGE(__VA_ARGS__)
@@ -171,58 +167,10 @@ main(int argc, char** argv)
   }
   {
     GLContextScope scope(glContextManager);
-    GLProgramManager pm;
-    if (!pm.init()) {
-      printf("fails to initialize GLProgramManager instance.\n");
-      return 1;
-    }
+    GLProgramManager pm(glContextManager.getGL3Interfaces());
     ImageProcessorWorkflow wf;
-    std::unique_ptr<ThresholdProcessor> threshold(new ThresholdProcessor);
-    if (!threshold->init(&pm, 255, 80)) {
-      LOGE(LOG_TAG, "fails to create image thresholdProcessor.\n");
-      return false;
-    }
 
-    std::unique_ptr<ErodeNonZeroProcessor> erode2time(
-      new ErodeNonZeroProcessor);
-    if (!erode2time->init(&pm, 3, 3, 2)) {
-      LOGE(LOG_TAG, "fails to create image erodeNonZeroProcessor.\n");
-      return false;
-    }
-
-    std::unique_ptr<ErodeNonZeroProcessor> erode10time(
-      new ErodeNonZeroProcessor);
-    if (!erode10time->init(&pm, 3, 3, 10)) {
-      LOGE(LOG_TAG, "fails to create image erodeNonZeroProcessor.\n");
-      return false;
-    }
-
-    std::unique_ptr<DilateNonZeroProcessor> dilate2time(
-      new DilateNonZeroProcessor);
-    if (!dilate2time->init(&pm, 3, 3, 2)) {
-      LOGE(LOG_TAG, "fails to create image dilateNonZeroProcessor.\n");
-      return false;
-    }
-
-    std::unique_ptr<DilateNonZeroProcessor> dilate10time(
-      new DilateNonZeroProcessor);
-    if (!dilate10time->init(&pm, 3, 3, 10)) {
-      LOGE(LOG_TAG, "fails to create image dilateNonZeroProcessor.\n");
-      return false;
-    }
-    std::unique_ptr<AdaptiveThresholdProcessor> adaptive(
-      new AdaptiveThresholdProcessor);
-    if (!adaptive->init(&pm, 255)) {
-      LOGE(LOG_TAG, "fails to create image AdaptiveThresholdProcessor.\n");
-      return false;
-    }
-    // wf.registerIImageProcessor(adaptive.get());
-    wf.registerIImageProcessor(threshold.get());
-    wf.registerIImageProcessor(dilate2time.get());
-    wf.registerIImageProcessor(erode2time.get());
-    wf.registerIImageProcessor(erode10time.get());
-    wf.registerIImageProcessor(dilate10time.get());
-
+    pm.getProgram(GLProgramManager::BINARIZERSUM);
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
 
