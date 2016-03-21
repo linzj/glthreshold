@@ -22,7 +22,7 @@ gaussianLoadImageFromFile(const char* file)
 }
 
 typedef uint32_t DWORD;
-typedef long LONG;
+typedef int32_t LONG;
 typedef uint16_t WORD;
 typedef void* LPVOID;
 typedef uint8_t BYTE;
