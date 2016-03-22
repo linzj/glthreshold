@@ -102,6 +102,9 @@ bool
 GLContextManager::initGL3Interfaces()
 {
   INIT_GL_FUNC_OR_RETURN_FALSE(glCreateShaderProgramv);
+  INIT_GL_FUNC_OR_RETURN_FALSE(glBindBufferRange);
+  INIT_GL_FUNC_OR_RETURN_FALSE(glBindImageTexture);
+  INIT_GL_FUNC_OR_RETURN_FALSE(glMemoryBarrier);
   return true;
 }
 

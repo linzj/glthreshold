@@ -171,6 +171,12 @@ main(int argc, char** argv)
     ImageProcessorWorkflow wf;
 
     pm.getProgram(GLProgramManager::BINARIZERSUM);
+    pm.getProgram(GLProgramManager::BINARIZERFIRSTPEAK);
+    pm.getProgram(GLProgramManager::BINARIZERSECONDSCORE);
+    pm.getProgram(GLProgramManager::BINARIZERSECONDPEAK);
+    pm.getProgram(GLProgramManager::BESTVALLEYSCORE);
+    pm.getProgram(GLProgramManager::BESTVALLEY);
+    pm.getProgram(GLProgramManager::BINARIZERASSIGN);
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
 

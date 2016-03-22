@@ -3,6 +3,12 @@
 
 extern "C" {
 extern const char* const binarizerSum;
+extern const char* const binarizerFirstPeak;
+extern const char* const binarizerSecondScore;
+extern const char* const binarizerSecondPeak;
+extern const char* const bestValleyScore;
+extern const char* const bestValley;
+extern const char* const binarizerAssign;
 }
 
 namespace {
@@ -13,6 +19,12 @@ getSourceMap()
 {
   static SourceMap g_map = {
     { GLProgramManager::BINARIZERSUM, &binarizerSum },
+    { GLProgramManager::BINARIZERFIRSTPEAK, &binarizerFirstPeak },
+    { GLProgramManager::BINARIZERSECONDSCORE, &binarizerSecondScore },
+    { GLProgramManager::BINARIZERSECONDPEAK, &binarizerSecondPeak },
+    { GLProgramManager::BESTVALLEYSCORE, &bestValleyScore },
+    { GLProgramManager::BESTVALLEY, &bestValley },
+    { GLProgramManager::BINARIZERASSIGN, &binarizerAssign },
   };
   return g_map;
 }
@@ -50,7 +62,7 @@ checkProgram(GLuint program)
 }
 
 GLuint
-GLProgramManager::getProgram(GLProgramManager::ProgramType programType)
+GLProgramManager::doGetProgram(GLProgramManager::ProgramType programType)
 {
   auto found = m_programs.find(programType);
   if (found != m_programs.end()) {
@@ -71,5 +83,15 @@ GLProgramManager::getProgram(GLProgramManager::ProgramType programType)
     return 0;
   }
   m_programs.insert(std::make_pair(programType, program));
+  return program;
+}
+
+GLuint
+GLProgramManager::getProgram(GLProgramManager::ProgramType programType)
+{
+  GLuint program = doGetProgram(programType);
+  if (program == 0) {
+    GLIMPROC_LOGE("fails to get program type: %d.\n", programType);
+  }
   return program;
 }
