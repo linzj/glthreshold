@@ -3,7 +3,8 @@ all: glthres
 .SUFFIXES:
 
 INCLUDES := -InvImage/include
-CXXFLAGS := -std=c++11 $(INCLUDES) -O0 -ggdb
+CXXFLAGS := -std=c++11 $(INCLUDES) -O0 -ggdb #-fsanitize=address
+LDFLAGS := #-fsanitize=address
 
 %.o: %.c
 	gcc $(CFLAGS) -c $*.c -o $*.o
@@ -22,6 +23,7 @@ log.cpp \
 GLContextManager.cpp \
 ImageProcessorWorkflow.cpp \
 BinarizeProcessor.cpp \
+BinarizeProcessorCPU.cpp \
 GLResources.cpp \
 GLCommon.cpp \
 GLProgramManager.cpp \

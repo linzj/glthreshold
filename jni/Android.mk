@@ -23,14 +23,12 @@ LOCAL_MODULE    := glthreshold
 LOCAL_SRC_FILES := main.cpp \
 log.cpp \
 GLContextManager.cpp \
-AdaptiveThresholdProcessor.cpp \
-ThresholdProcessor.cpp \
-DilateNonZeroProcessor.cpp \
-ErodeNonZeroProcessor.cpp \
-ImageProcessorWorkflow.cpp \
+BinarizeProcessor.cpp \
+BinarizeProcessorCPU.cpp \
 GLResources.cpp \
 GLCommon.cpp \
 GLProgramManager.cpp \
+ImageProcessorWorkflow.cpp \
 glsl.glsl.c \
 nvImage/src/rgbe.c \
 nvImage/src/nvImage.cpp \

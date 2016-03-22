@@ -12,7 +12,7 @@ struct rowsum
     highp int sum[LUMINANCE_BUCKETS];
 };
 
-layout(binding = 0) buffer ROWSUM
+layout(binding = 0) coherent buffer ROWSUM
 {
   rowsum s[];
 } globalRowSum;
@@ -38,25 +38,26 @@ struct rowsum
     highp int sum[LUMINANCE_BUCKETS];
 };
 
-layout(binding = 0) buffer ROWSUM
+layout(binding = 0) coherent buffer ROWSUM
 {
   rowsum s[];
 } globalRowSum;
 
-layout(binding = 1) buffer FIRSTPEEK
+layout(binding = 1) coherent buffer FIRSTPEEK
 {
-    volatile highp int p[];
+    highp int p[];
 } firstpeak;
 
 void main()
 {
   highp int x = int(gl_GlobalInvocationID.x);
   highp int y = int(gl_GlobalInvocationID.y);
+  highp int myscore = globalRowSum.s[y].sum[x];
   while (true) {
     memoryBarrierBuffer();
     int idx = firstpeak.p[y];
     int score = globalRowSum.s[y].sum[idx];
-    if (globalRowSum.s[y].sum[x] > score) {
+    if (myscore > score) {
         atomicCompSwap(firstpeak.p[y], idx, x);
     } else {
         break;
@@ -75,17 +76,17 @@ struct rowsum
     highp int sum[LUMINANCE_BUCKETS];
 };
 
-layout(binding = 0) buffer ROWSUM
+layout(binding = 0) coherent buffer ROWSUM
 {
   rowsum s[];
 } globalRowSum;
 
-layout(binding = 1) readonly buffer FIRSTPEEK
+layout(binding = 1) coherent readonly buffer FIRSTPEEK
 {
     highp int p[];
 } firstpeak;
 
-layout(binding = 3) buffer SECONDPEEKSCORE
+layout(binding = 3) coherent buffer SECONDPEEKSCORE
 {
     highp int score[];
 } secondpeakscore;
@@ -106,17 +107,17 @@ void main()
 #define LUMINANCE_BUCKETS (1 << LUMINANCE_BITS)
 layout(local_size_x = 1, local_size_y = 1) in;
 
-layout(binding = 1) readonly buffer FIRSTPEEK
+layout(binding = 1) coherent readonly buffer FIRSTPEEK
 {
     highp int p[];
 } firstpeak;
 
-layout(binding = 2) buffer SECONDPEEK
+layout(binding = 2) coherent buffer SECONDPEEK
 {
-    volatile highp int p[];
+    highp int p[];
 } secondpeak;
 
-layout(binding = 3) readonly buffer SECONDPEEKSCORE
+layout(binding = 3) coherent readonly buffer SECONDPEEKSCORE
 {
     highp int score[];
 } secondpeakscore;
@@ -149,22 +150,22 @@ struct rowsum
     highp int sum[LUMINANCE_BUCKETS];
 };
 
-layout(binding = 0) buffer ROWSUM
+layout(binding = 0) coherent buffer ROWSUM
 {
   rowsum s[];
 } globalRowSum;
 
-layout(binding = 1) readonly buffer FIRSTPEEK
+layout(binding = 1) coherent readonly buffer FIRSTPEEK
 {
     highp int p[];
 } firstpeak;
 
-layout(binding = 2) readonly buffer SECONDPEEK
+layout(binding = 2) coherent readonly buffer SECONDPEEK
 {
     highp int p[];
 } secondpeak;
 
-layout(binding = 4) buffer BESTVALLEYSCORE
+layout(binding = 4) coherent buffer BESTVALLEYSCORE
 {
     highp int score[];
 } bestvalleyscore;
@@ -175,6 +176,11 @@ void main()
   highp int y = int(gl_GlobalInvocationID.y);
   highp int firstPeak = int(firstpeak.p[y]);
   highp int secondPeak = int(secondpeak.p[y]);
+  if (firstPeak > secondPeak) {
+    int temp = firstPeak;
+    firstPeak = secondPeak;
+    secondPeak = temp;
+  }
   if (x >= secondPeak)
       return;
   if (x <= firstPeak)
@@ -197,29 +203,29 @@ struct rowsum
     highp int sum[LUMINANCE_BUCKETS];
 };
 
-layout(binding = 0) buffer ROWSUM
+layout(binding = 0) coherent buffer ROWSUM
 {
   rowsum s[];
 } globalRowSum;
 
-layout(binding = 1) readonly buffer FIRSTPEEK
+layout(binding = 1) coherent readonly buffer FIRSTPEEK
 {
     highp int p[];
 } firstpeak;
 
-layout(binding = 2) readonly buffer SECONDPEEK
+layout(binding = 2) coherent readonly buffer SECONDPEEK
 {
     highp int p[];
 } secondpeak;
 
-layout(binding = 4) readonly buffer BESTVALLEYSCORE
+layout(binding = 4) coherent readonly buffer BESTVALLEYSCORE
 {
     highp int score[];
 } bestvalleyscore;
 
-layout(binding = 5) buffer BESTVALLEY
+layout(binding = 5) coherent buffer BESTVALLEY
 {
-    highp volatile int p[];
+    highp int p[];
 } bestvalley;
 
 void main()
@@ -228,12 +234,18 @@ void main()
   highp int y = int(gl_GlobalInvocationID.y);
   highp int firstPeak = int(firstpeak.p[y]);
   highp int secondPeak = int(secondpeak.p[y]);
+  if (firstPeak > secondPeak) {
+    int temp = firstPeak;
+    firstPeak = secondPeak;
+    secondPeak = temp;
+  }
   if (x >= secondPeak)
       return;
   if (x <= firstPeak)
       return;
   highp int myscore = bestvalleyscore.score[y * LUMINANCE_BUCKETS + x];
-
+  if (myscore <= 0)
+      return;
   while (true) {
     memoryBarrierBuffer();
     highp int idx = bestvalley.p[y];
@@ -247,9 +259,12 @@ void main()
 }
 ---binarizerAssign
 #version 310 es
+#define LUMINANCE_BITS  5
+#define LUMINANCE_SHIFT  (8 - LUMINANCE_BITS)
+#define LUMINANCE_BUCKETS (1 << LUMINANCE_BITS)
 layout(local_size_x = 1, local_size_y = 1) in;
 
-layout(binding = 4) readonly buffer BESTVALLEY
+layout(binding = 5) coherent readonly buffer BESTVALLEY
 {
     highp int p[];
 } bestvalley;
@@ -261,9 +276,8 @@ void main()
     highp float left = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(-1, 0), 0).r;
     highp float center = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy), 0).r;
     highp float right = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(+1, 0), 0).r;
-    highp float blackpoint = float(bestvalley.p[gl_GlobalInvocationID.y]) / 255.0;
+    highp float blackpoint = float(bestvalley.p[gl_GlobalInvocationID.y] << LUMINANCE_SHIFT) / 255.0;
     highp float luminance = ((center * 4.0) - left - right) / 2.0;
-
     if (luminance >= blackpoint) {
         imageStore(u_TextureOut, ivec2(gl_GlobalInvocationID.xy), vec4(1.0));
     } else {

@@ -107,6 +107,8 @@ GLContextManager::initGL3Interfaces()
   INIT_GL_FUNC_OR_RETURN_FALSE(glMemoryBarrier);
   INIT_GL_FUNC_OR_RETURN_FALSE(glDispatchCompute);
   INIT_GL_FUNC_OR_RETURN_FALSE(glTexStorage2D);
+  INIT_GL_FUNC_OR_RETURN_FALSE(glMapBufferRange);
+  INIT_GL_FUNC_OR_RETURN_FALSE(glUnmapBuffer);
   return true;
 }
 

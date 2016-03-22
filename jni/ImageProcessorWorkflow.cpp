@@ -79,7 +79,6 @@ ImageProcessorWorkflow::process(const GL3Interfaces& interfaces,
   m_height = 0;
   m_staled = false;
   m_interfaces = nullptr;
-  // clean up state.  glBindBuffer(GL_ARRAY_BUFFER, 0);
   return ImageOutput{ std::move(readback) };
 }
 
