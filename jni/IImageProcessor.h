@@ -6,6 +6,7 @@
 
 class GLTexture;
 class ImageProcessorWorkflow;
+class GL3Interfaces;
 
 struct ProcessorOutput
 {
@@ -23,7 +24,8 @@ class IImageProcessor
 {
 public:
   virtual ~IImageProcessor() = default;
-  virtual ProcessorOutput process(const ProcessorInput& desc) = 0;
+  virtual ProcessorOutput process(const GL3Interfaces& interfaces,
+                                  const ProcessorInput& desc) = 0;
 };
 
 #endif /* IIMAGEPROCESSOR_H */

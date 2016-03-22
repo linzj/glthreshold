@@ -19,6 +19,7 @@ struct ImageOutput
 
 class GLTexture;
 class IImageProcessor;
+class GL3Interfaces;
 
 class ImageProcessorWorkflow final
 {
@@ -26,7 +27,7 @@ public:
   ImageProcessorWorkflow();
   ~ImageProcessorWorkflow();
   void registerIImageProcessor(IImageProcessor* processor);
-  ImageOutput process(const ImageDesc& desc);
+  ImageOutput process(const GL3Interfaces& interfaces, const ImageDesc& desc);
   void enterFramebuffer();
   void leaveFramebuffer();
   GLint checkFramebuffer();
@@ -42,7 +43,7 @@ private:
   std::vector<std::shared_ptr<GLTexture>> m_fbotextures;
   GLuint m_fbo;
   GLint m_width, m_height;
-  GLuint m_vbo;
+  const GL3Interfaces* m_interfaces;
   bool m_staled;
 };
 

@@ -1,5 +1,9 @@
+.PHONY: all
+all: glthres
+.SUFFIXES:
+
 INCLUDES := -InvImage/include
-CXXFLAGS := -std=c++11 $(INCLUDES)
+CXXFLAGS := -std=c++11 $(INCLUDES) -O0 -ggdb
 
 %.o: %.c
 	gcc $(CFLAGS) -c $*.c -o $*.o
@@ -13,43 +17,11 @@ CXXFLAGS := -std=c++11 $(INCLUDES)
 	g++ $(CFLAGS) -c $*.S -o $*.o
 	g++ -MM $(CFLAGS) $*.S > $*.d
 
-OBJS := main.o \
-log.o \
-GLContextManager.o \
-AdaptiveThresholdProcessor.o \
-ThresholdProcessor.o \
-DilateNonZeroProcessor.o \
-ErodeNonZeroProcessor.o \
-ImageProcessorWorkflow.o \
-GLResources.o \
-GLCommon.o \
-GLProgramManager.o \
-glsl.glsl.o \
-nvImage/src/rgbe.o \
-nvImage/src/nvImage.o \
-nvImage/src/nvImagePng.o \
-libpng-1.2.51/png.o \
-libpng-1.2.51/pngerror.o \
-libpng-1.2.51/pnggccrd.o \
-libpng-1.2.51/pngget.o \
-libpng-1.2.51/pngmem.o \
-libpng-1.2.51/pngpread.o \
-libpng-1.2.51/pngread.o \
-libpng-1.2.51/pngrio.o \
-libpng-1.2.51/pngrtran.o \
-libpng-1.2.51/pngrutil.o \
-libpng-1.2.51/pngset.o \
-libpng-1.2.51/pngtrans.o \
-libpng-1.2.51/pngvcrd.o \
-libpng-1.2.51/pngwio.o \
-libpng-1.2.51/pngwrite.o \
-libpng-1.2.51/pngwtran.o \
-libpng-1.2.51/pngwutil.o \
-
 CXX_SOURCES := main.cpp \
 log.cpp \
 GLContextManager.cpp \
 ImageProcessorWorkflow.cpp \
+BinarizeProcessor.cpp \
 GLResources.cpp \
 GLCommon.cpp \
 GLProgramManager.cpp \
@@ -79,19 +51,17 @@ libpng-1.2.51/pngwrite.c \
 libpng-1.2.51/pngwtran.c \
 libpng-1.2.51/pngwutil.c \
 
+OBJS := $(CXX_SOURCES:.cpp=.o) $(C_SOURCES:.c=.o)
+
+-include $(OBJS:.o=.d)
 
 LDLIBS := -lEGL -lGLESv2 -lz
 
-glthres: $(C_SOURCES:.c=.o) $(CXX_SOURCES:.cpp=.o)
+glthres: $(OBJS)
 	g++ $(LDFLAGS) -o $@ $^ $(LDLIBS) -ldl
 
 $(GLSL_BINDING): glsl.glsl updateglsl.py
 	python updateglsl.py glsl.glsl
-
-all: glthres
-
-.PHONY: all
-.SUFFIXES:
 
 clean:
 	rm *.o *.d glsl.glsl.c

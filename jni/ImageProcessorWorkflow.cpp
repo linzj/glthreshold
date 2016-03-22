@@ -1,4 +1,5 @@
 #include "ImageProcessorWorkflow.h"
+#include "GL3Interfaces.h"
 #include "GLResources.h"
 #include "IImageProcessor.h"
 
@@ -20,20 +21,11 @@ ImageProcessorWorkflow::ImageProcessorWorkflow()
   : m_fbo(0)
   , m_width(0)
   , m_height(0)
-  , m_vbo(0)
+  , m_interfaces(nullptr)
   , m_staled(false)
 {
   CHECK_CONTEXT_NOT_NULL();
   glGenFramebuffers(1, &m_fbo);
-  glGenBuffers(1, &m_vbo);
-  static float positions[][4] = {
-    { -1.0, 1.0, 0.0, 1.0 },
-    { -1.0, -1.0, 0.0, 1.0 },
-    { 1.0, 1.0, 0.0, 1.0 },
-    { 1.0, -1.0, 0.0, 1.0 },
-  };
-  glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
 }
 
 ImageProcessorWorkflow::~ImageProcessorWorkflow()
@@ -41,7 +33,6 @@ ImageProcessorWorkflow::~ImageProcessorWorkflow()
   m_staled = true;
   CHECK_CONTEXT_NOT_NULL();
   glDeleteFramebuffers(1, &m_fbo);
-  glDeleteBuffers(1, &m_vbo);
 }
 
 void
@@ -51,13 +42,15 @@ ImageProcessorWorkflow::registerIImageProcessor(IImageProcessor* processor)
 }
 
 ImageOutput
-ImageProcessorWorkflow::process(const ImageDesc& desc)
+ImageProcessorWorkflow::process(const GL3Interfaces& interfaces,
+                                const ImageDesc& desc)
 {
   m_width = desc.width;
   m_height = desc.height;
   GLuint texture;
 
   CHECK_CONTEXT_NOT_NULL();
+  m_interfaces = &interfaces;
   glGenTextures(1, &texture);
   allocateTexture(texture, m_width, m_height, desc.format, desc.data);
   std::shared_ptr<GLTexture> scope(new GLTexture(texture));
@@ -68,14 +61,10 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   ProcessorInput pin = { m_width, m_height, scope, this };
   scope.reset();
   preallocateTextures();
-  glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-  glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(0);
   for (auto& p : m_processors) {
-    ProcessorOutput pout = p->process(pin);
+    ProcessorOutput pout = p->process(interfaces, pin);
     pin.color = pout.color;
   }
-  glDisableVertexAttribArray(0);
   FBOScope fboscope(this);
   setColorAttachmentForFramebuffer(pin.color->id());
 
@@ -89,8 +78,8 @@ ImageProcessorWorkflow::process(const ImageDesc& desc)
   m_width = 0;
   m_height = 0;
   m_staled = false;
-  // clean up state.
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  m_interfaces = nullptr;
+  // clean up state.  glBindBuffer(GL_ARRAY_BUFFER, 0);
   return ImageOutput{ std::move(readback) };
 }
 
@@ -118,7 +107,7 @@ ImageProcessorWorkflow::requestTextureForFramebuffer()
     GLuint texture;
     CHECK_CONTEXT_NOT_NULL();
     glGenTextures(1, &texture);
-    allocateTexture(texture, m_width, m_height, GL_RGBA);
+    allocateTexture(texture, m_width, m_height, GL_RGBA8);
     std::shared_ptr<GLTexture> resource(new GLRebornTexture(texture, this));
     return resource;
   }
@@ -151,12 +140,17 @@ ImageProcessorWorkflow::allocateTexture(GLuint texture, GLint width,
                                         GLint height, GLenum format, void* data)
 {
   glBindTexture(GL_TEXTURE_2D, texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-               GL_UNSIGNED_BYTE, data);
+  if (data) {
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
+                 GL_UNSIGNED_BYTE, data);
+  } else {
+    m_interfaces->glTexStorage2D(GL_TEXTURE_2D, 1, format, width, height);
+  }
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  checkError("allocateTexture");
 }
 
 void
@@ -170,7 +164,7 @@ ImageProcessorWorkflow::preallocateTextures()
   for (int i = 0; i < s_preallocateTextureCount; ++i) {
     m_fbotextures.push_back(std::move(
       std::unique_ptr<GLTexture>(new GLRebornTexture(textures[i], this))));
-    allocateTexture(textures[i], m_width, m_height, GL_RGBA);
+    allocateTexture(textures[i], m_width, m_height, GL_RGBA8);
   }
 }
 

@@ -1,6 +1,8 @@
 #ifndef GL3INTERFACES_H
 #define GL3INTERFACES_H
 #include "GLCommon.h"
+#define GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS 0x90DD
+#define GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT 0x90DF
 #define GL_COMPUTE_SHADER 0x91B9
 #define GL_UNIFORM_BUFFER 0x8A11
 #define GL_UNIFORM_BUFFER_BINDING 0x8A28
@@ -18,6 +20,9 @@
 #define GL_FRAMEBUFFER_BARRIER_BIT 0x00000400
 #define GL_TRANSFORM_FEEDBACK_BARRIER_BIT 0x00000800
 #define GL_ATOMIC_COUNTER_BARRIER_BIT 0x00001000
+#define GL_READ_ONLY 0x88B8
+#define GL_WRITE_ONLY 0x88B9
+#define GL_RGBA8 0x8058
 
 #define GLAPIENTRY GL_APIENTRY
 
@@ -34,11 +39,20 @@ typedef void(GLAPIENTRY* PFNGLBINDIMAGETEXTUREPROC)(GLuint unit, GLuint texture,
                                                     GLenum format);
 typedef void(GLAPIENTRY* PFNGLMEMORYBARRIERPROC)(GLbitfield barriers);
 
+typedef void(GLAPIENTRY* PFNGLDISPATCHCOMPUTEPROC)(GLuint num_groups_x,
+                                                   GLuint num_groups_y,
+                                                   GLuint num_groups_z);
+typedef void(GLAPIENTRY* PFNGLTEXSTORAGE2DPROC)(GLenum target, GLsizei levels,
+                                                GLenum internalformat,
+                                                GLsizei width, GLsizei height);
+
 struct GL3Interfaces
 {
   PFNGLCREATESHADERPROGRAMVPROC glCreateShaderProgramv;
   PFNGLBINDBUFFERRANGEPROC glBindBufferRange;
   PFNGLBINDIMAGETEXTUREPROC glBindImageTexture;
   PFNGLMEMORYBARRIERPROC glMemoryBarrier;
+  PFNGLDISPATCHCOMPUTEPROC glDispatchCompute;
+  PFNGLTEXSTORAGE2DPROC glTexStorage2D;
 };
 #endif /* GL3INTERFACES_H */

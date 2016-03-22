@@ -16,4 +16,11 @@ void checkContextNotNull(int line, const char* file);
 
 #define CHECK_CONTEXT_NOT_NULL() checkContextNotNull(__LINE__, __FILE__)
 
+template <typename T>
+static inline T
+roundUp(T n, int alignment)
+{
+  return (n + alignment - 1) & ~(alignment - 1);
+}
+
 #endif /* GLCOMMON_H */

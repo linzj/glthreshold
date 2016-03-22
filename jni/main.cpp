@@ -1,3 +1,4 @@
+#include "BinarizeProcessor.h"
 #include "GLContextManager.h"
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
@@ -170,19 +171,18 @@ main(int argc, char** argv)
     GLProgramManager pm(glContextManager.getGL3Interfaces());
     ImageProcessorWorkflow wf;
 
-    pm.getProgram(GLProgramManager::BINARIZERSUM);
-    pm.getProgram(GLProgramManager::BINARIZERFIRSTPEAK);
-    pm.getProgram(GLProgramManager::BINARIZERSECONDSCORE);
-    pm.getProgram(GLProgramManager::BINARIZERSECONDPEAK);
-    pm.getProgram(GLProgramManager::BESTVALLEYSCORE);
-    pm.getProgram(GLProgramManager::BESTVALLEY);
-    pm.getProgram(GLProgramManager::BINARIZERASSIGN);
+    std::unique_ptr<BinarizeProcessor> binarizeProcess(new BinarizeProcessor);
+    if (!binarizeProcess->init(&pm)) {
+      GLIMPROC_LOGE("fails to init binarizeProcess.\n");
+      return 1;
+    }
+    wf.registerIImageProcessor(binarizeProcess.get());
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
 
     ImageDesc desc = { image->getWidth(), image->getHeight(),
                        image->getFormat(), image->getLevel(0) };
-    ImageOutput imo = wf.process(desc);
+    ImageOutput imo = wf.process(glContextManager.getGL3Interfaces(), desc);
     std::unique_ptr<uint8_t[]> readback(std::move(imo.outputBytes));
     std::unique_ptr<uint8_t[]> processed(new uint8_t[desc.width * desc.height]);
     const uint8_t* rbp = readback.get();

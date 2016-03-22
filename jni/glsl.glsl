@@ -1,7 +1,7 @@
 ---binarizerSum
 #version 310 es
 layout(local_size_x = 1, local_size_y = 1) in;
-layout(rgba8, binding = 0) uniform highp readonly image2D u_Texture;
+layout(binding = 0) uniform highp sampler2D u_Texture;
 
 #define LUMINANCE_BITS  5
 #define LUMINANCE_SHIFT  (8 - LUMINANCE_BITS)
@@ -21,7 +21,7 @@ void main()
 {
   highp int y = int(gl_GlobalInvocationID.y);
 
-  highp int r = int(imageLoad(u_Texture, ivec2(gl_GlobalInvocationID)).r * 255.0);
+  highp int r = int(texelFetch(u_Texture, ivec2(gl_GlobalInvocationID), 0).r * 255.0);
   
   highp int x = r >> LUMINANCE_SHIFT;
   atomicAdd(globalRowSum.s[y].sum[x], 1);
@@ -164,7 +164,7 @@ layout(binding = 2) readonly buffer SECONDPEEK
     highp int p[];
 } secondpeak;
 
-layout(binding = 3) buffer BESTVALLEYSCORE
+layout(binding = 4) buffer BESTVALLEYSCORE
 {
     highp int score[];
 } bestvalleyscore;
@@ -212,12 +212,12 @@ layout(binding = 2) readonly buffer SECONDPEEK
     highp int p[];
 } secondpeak;
 
-layout(binding = 3) readonly buffer BESTVALLEYSCORE
+layout(binding = 4) readonly buffer BESTVALLEYSCORE
 {
     highp int score[];
 } bestvalleyscore;
 
-layout(binding = 4) buffer BESTVALLEY
+layout(binding = 5) buffer BESTVALLEY
 {
     highp volatile int p[];
 } bestvalley;
@@ -253,18 +253,19 @@ layout(binding = 4) readonly buffer BESTVALLEY
 {
     highp int p[];
 } bestvalley;
-layout(rgba8, binding = 0) uniform highp readonly image2D u_TextureIn;
-layout(rgba8, binding = 1) uniform highp writeonly image2D u_TextureOut;
+layout(binding = 0) uniform highp sampler2D u_TextureIn;
+layout(rgba8, binding = 0) uniform highp writeonly image2D u_TextureOut;
 
 void main()
 {
-    highp float left = imageLoad(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(-1, 0)).r;
-    highp float center = imageLoad(u_TextureIn, ivec2(gl_GlobalInvocationID.xy)).r;
-    highp float right = imageLoad(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(+1, 0)).r;
+    highp float left = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(-1, 0), 0).r;
+    highp float center = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy), 0).r;
+    highp float right = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(+1, 0), 0).r;
     highp float blackpoint = float(bestvalley.p[gl_GlobalInvocationID.y]) / 255.0;
     highp float luminance = ((center * 4.0) - left - right) / 2.0;
+
     if (luminance >= blackpoint) {
-        imageStore(u_TextureOut, ivec2(gl_GlobalInvocationID.xy), vec4(luminance));
+        imageStore(u_TextureOut, ivec2(gl_GlobalInvocationID.xy), vec4(1.0));
     } else {
         imageStore(u_TextureOut, ivec2(gl_GlobalInvocationID.xy), vec4(0.0));
     }
