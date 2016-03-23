@@ -181,9 +181,10 @@ void main()
   highp int x = int(gl_GlobalInvocationID.x);
   highp int y = int(gl_GlobalInvocationID.y);
   highp int firstPeak = int(firstpeak.p[y]);
+  highp int maxIndex = firstPeak;
   highp int secondPeak = int(secondpeak.p[y]);
   if (firstPeak > secondPeak) {
-    int temp = firstPeak;
+    highp int temp = firstPeak;
     firstPeak = secondPeak;
     secondPeak = temp;
   }
@@ -192,7 +193,7 @@ void main()
   if (x <= firstPeak)
       return;
   highp int fromFirst = x - firstPeak;
-  highp int score = fromFirst * fromFirst * (secondPeak - x) * (globalRowSum.s[y].sum[firstPeak] - globalRowSum.s[y].sum[x]);
+  highp int score = fromFirst * fromFirst * (secondPeak - x) * (globalRowSum.s[y].sum[maxIndex] - globalRowSum.s[y].sum[x]);
 
   bestvalleyscore.score[y * LUMINANCE_BUCKETS + x] = score;
 }
