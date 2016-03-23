@@ -54,11 +54,14 @@ void main()
   highp int y = int(gl_GlobalInvocationID.y);
   highp int myscore = globalRowSum.s[y].sum[x];
   while (true) {
-    memoryBarrierBuffer();
     int idx = firstpeak.p[y];
     int score = globalRowSum.s[y].sum[idx];
     if (myscore > score) {
         atomicCompSwap(firstpeak.p[y], idx, x);
+        memoryBarrierBuffer();
+    } else if (myscore == score && x < idx) {
+        atomicCompSwap(firstpeak.p[y], idx, x);
+        memoryBarrierBuffer();
     } else {
         break;
     }
@@ -128,11 +131,14 @@ void main()
   highp int y = int(gl_GlobalInvocationID.y);
   highp int myscore = secondpeakscore.score[y * LUMINANCE_BUCKETS + x];
   while (true) {
-    memoryBarrierBuffer();
     highp int idx = secondpeak.p[y];
     highp int scorecur = secondpeakscore.score[y * LUMINANCE_BUCKETS + idx];
     if (myscore > scorecur) {
         atomicCompSwap(secondpeak.p[y], idx, x);
+        memoryBarrierBuffer();
+    } else if (myscore == scorecur && x < idx) {
+        atomicCompSwap(secondpeak.p[y], idx, x);
+        memoryBarrierBuffer();
     } else {
         break;
     }
@@ -247,11 +253,14 @@ void main()
   if (myscore <= 0)
       return;
   while (true) {
-    memoryBarrierBuffer();
     highp int idx = bestvalley.p[y];
     highp int scorecur = bestvalleyscore.score[y * LUMINANCE_BUCKETS + idx];
     if (myscore > scorecur) {
         atomicCompSwap(bestvalley.p[y], idx, x);
+        memoryBarrierBuffer();
+    } else if (myscore == scorecur && x < idx) {
+        atomicCompSwap(bestvalley.p[y], idx, x);
+        memoryBarrierBuffer();
     } else {
         break;
     }
