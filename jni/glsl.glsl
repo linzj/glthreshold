@@ -58,10 +58,8 @@ void main()
     int score = globalRowSum.s[y].sum[idx];
     if (myscore > score) {
         atomicCompSwap(firstpeak.p[y], idx, x);
-        memoryBarrierBuffer();
     } else if (myscore == score && x < idx) {
         atomicCompSwap(firstpeak.p[y], idx, x);
-        memoryBarrierBuffer();
     } else {
         break;
     }
@@ -135,10 +133,8 @@ void main()
     highp int scorecur = secondpeakscore.score[y * LUMINANCE_BUCKETS + idx];
     if (myscore > scorecur) {
         atomicCompSwap(secondpeak.p[y], idx, x);
-        memoryBarrierBuffer();
     } else if (myscore == scorecur && x < idx) {
         atomicCompSwap(secondpeak.p[y], idx, x);
-        memoryBarrierBuffer();
     } else {
         break;
     }
@@ -258,10 +254,8 @@ void main()
     highp int scorecur = bestvalleyscore.score[y * LUMINANCE_BUCKETS + idx];
     if (myscore > scorecur) {
         atomicCompSwap(bestvalley.p[y], idx, x);
-        memoryBarrierBuffer();
     } else if (myscore == scorecur && x < idx) {
         atomicCompSwap(bestvalley.p[y], idx, x);
-        memoryBarrierBuffer();
     } else {
         break;
     }
