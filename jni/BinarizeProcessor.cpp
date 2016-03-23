@@ -116,7 +116,6 @@ BinarizeProcessor::process(const GL3Interfaces& interfaces,
   glUseProgram(m_bestValley);
   interfaces.glDispatchCompute(LUMINANCE_BUCKETS, desc.height, 1);
   GL_CMD_BARRIER;
-  interfaces.glMemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
 
   glUseProgram(m_binarizerAssign);
   interfaces.glDispatchCompute(desc.width, desc.height, 1);
