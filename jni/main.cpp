@@ -5,6 +5,7 @@
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
 #include "QRCodeDetector.h"
+#include <cmath>
 #include <memory>
 #include <nvImage.h>
 #define LOGE(tag, ...) GLIMPROC_LOGE(__VA_ARGS__)
@@ -229,6 +230,32 @@ main(int argc, char** argv)
         rowp[0] = *procp;
         rowp[1] = *procp;
         rowp[2] = *procp;
+#if defined(USE_CPU)
+        if (fi.getBottomLeft()) {
+          if (std::abs(x - fi.getBottomLeft()->getX()) < 5 &&
+              std::abs(y - fi.getBottomLeft()->getY()) < 5) {
+            rowp[0] = 0;
+            rowp[1] = 0;
+            rowp[2] = 255;
+          }
+        }
+        if (fi.getBottomLeft()) {
+          if (std::abs(x - fi.getTopLeft()->getX()) < 5 &&
+              std::abs(y - fi.getTopLeft()->getY()) < 5) {
+            rowp[0] = 0;
+            rowp[1] = 0;
+            rowp[2] = 255;
+          }
+        }
+        if (fi.getBottomLeft()) {
+          if (std::abs(x - fi.getTopRight()->getX()) < 5 &&
+              std::abs(y - fi.getTopRight()->getY()) < 5) {
+            rowp[0] = 0;
+            rowp[1] = 0;
+            rowp[2] = 255;
+          }
+        }
+#endif
       }
     }
     saveBitmap(image->getWidth(), image->getHeight(), BITMAP_PATH,
