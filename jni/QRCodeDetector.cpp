@@ -425,6 +425,9 @@ QRCodeDetector::detect(int width, int height, const uint8_t* data)
   }
 
   std::unique_ptr<FinderPattern[]> patternInfo = selectBestPatterns();
+  if (!patternInfo.get()) {
+    return FinderPatternInfo(std::move(patternInfo));
+  }
   ResultPoint::orderBestPatterns(patternInfo.get());
 
   return FinderPatternInfo(std::move(patternInfo));
@@ -531,8 +534,7 @@ QRCodeDetector::selectBestPatterns()
   FinderPatterVec tmp(std::move(m_possibleCenters));
 
   return std::unique_ptr<FinderPattern[]>(
-    new FinderPattern[3]{ *m_possibleCenters.at(0), *m_possibleCenters.at(1),
-                          *m_possibleCenters.at(2) });
+    new FinderPattern[3]{ *tmp.at(0), *tmp.at(1), *tmp.at(2) });
 }
 
 int

@@ -1,8 +1,10 @@
 #include "BinarizeProcessor.h"
 #include "BinarizeProcessorCPU.h"
+#include "FinderPattern.h"
 #include "GLContextManager.h"
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
+#include "QRCodeDetector.h"
 #include <memory>
 #include <nvImage.h>
 #define LOGE(tag, ...) GLIMPROC_LOGE(__VA_ARGS__)
@@ -204,7 +206,17 @@ main(int argc, char** argv)
     std::unique_ptr<uint8_t[]> processed(
       binarizeProcessCPU(image->getWidth(), image->getHeight(),
                          static_cast<const uint8_t*>(image->getLevel(0))));
+    QRCodeDetector detector;
     clock_gettime(CLOCK_MONOTONIC, &t2);
+    FinderPatternInfo fi =
+      detector.detect(image->getWidth(), image->getHeight(), processed.get());
+    if (fi.getBottomLeft())
+      printf("found at (%lf, %lf), (%lf, %lf), (%lf, %lf).\n",
+             fi.getBottomLeft()->getX(), fi.getBottomLeft()->getY(),
+             fi.getTopLeft()->getX(), fi.getTopLeft()->getY(),
+             fi.getTopRight()->getX(), fi.getTopRight()->getY());
+    else
+      printf("not found.\n");
 #endif
     int rowBytes = (image->getWidth() * 24 + 31) / 32 * 4;
     std::unique_ptr<uint8_t[]> saveBits(
