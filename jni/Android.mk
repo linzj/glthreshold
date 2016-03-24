@@ -15,11 +15,13 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+OMPFLAGS := -fopenmp
 
 LOCAL_CXXFLAGS += -std=c++11
 LOCAL_CFLAGS += -I$(LOCAL_PATH)/nvImage/include -I$(LOCAL_PATH)/libpng-1.2.51 -O2 -Wall \
 				-DANDROID_LOGCAT_ENABLED \
-				-mfpu=neon
+				-mfpu=neon $(OMPFLAGS)
+LOCAL_LDFLAGS += $(OMPFLAGS)
 LOCAL_MODULE    := glthreshold
 LOCAL_SRC_FILES := main.cpp \
 log.cpp \
