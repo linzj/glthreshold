@@ -75,7 +75,7 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
   memset(output.get(), 0, width * height);
 #pragma omp parallel
   {
-#pragma omp for schedule(runtime) nowait
+#pragma omp for schedule(runtime)
     for (int y = 0; y < height; ++y) {
       const uint8_t* line = data + y * width;
       int bucket[LUMINANCE_BUCKETS];

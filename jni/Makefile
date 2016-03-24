@@ -26,6 +26,10 @@ GLContextManager.cpp \
 ImageProcessorWorkflow.cpp \
 BinarizeProcessor.cpp \
 BinarizeProcessorCPU.cpp \
+FinderPattern.cpp \
+FinderPatternInfo.cpp \
+QRCodeDetector.cpp \
+ResultPoint.cpp \
 GLResources.cpp \
 GLCommon.cpp \
 GLProgramManager.cpp \
