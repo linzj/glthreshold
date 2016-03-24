@@ -11,7 +11,7 @@
 #else
 #define BITMAP_PATH "shit.bmp"
 #endif
-// #define USE_CPU 1
+#define USE_CPU 1
 
 static nv::Image*
 gaussianLoadImageFromFile(const char* file)
@@ -152,6 +152,7 @@ main(int argc, char** argv)
     printf("fails to load image.\n");
     return 1;
   }
+#if !defined(USE_CPU)
   EGLDisplay dpy;
   dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
   if (dpy == EGL_NO_DISPLAY) {
@@ -183,7 +184,6 @@ main(int argc, char** argv)
     clock_gettime(CLOCK_MONOTONIC, &t1);
     uint8_t* procp;
 
-#if !defined(USE_CPU)
     ImageDesc desc = { image->getWidth(), image->getHeight(),
                        image->getFormat(), image->getLevel(0) };
     ImageOutput imo = wf.process(glContextManager.getGL3Interfaces(), desc);
@@ -197,6 +197,10 @@ main(int argc, char** argv)
     clock_gettime(CLOCK_MONOTONIC, &t2);
 
 #else
+  {
+    struct timespec t1, t2;
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    uint8_t* procp;
     std::unique_ptr<uint8_t[]> processed(
       binarizeProcessCPU(image->getWidth(), image->getHeight(),
                          static_cast<const uint8_t*>(image->getLevel(0))));

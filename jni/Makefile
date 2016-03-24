@@ -2,9 +2,11 @@
 all: glthres
 .SUFFIXES:
 
+OMPFLAGS := -fopenmp
+
 INCLUDES := -InvImage/include
-CXXFLAGS := -std=c++11 $(INCLUDES) -O0 -ggdb #-fsanitize=address
-LDFLAGS := #-fsanitize=address
+CXXFLAGS := -std=c++11 $(INCLUDES) -O2 -ggdb $(OMPFLAGS) #-fsanitize=address
+LDFLAGS := $(OMPFLAGS) #-fsanitize=address
 
 %.o: %.c
 	gcc $(CFLAGS) -c $*.c -o $*.o
@@ -66,4 +68,4 @@ $(GLSL_BINDING): glsl.glsl updateglsl.py
 	python updateglsl.py glsl.glsl
 
 clean:
-	rm *.o *.d glsl.glsl.c
+	rm glsl.glsl.c $(OBJS) $(CXX_SOURCES:.cpp=.d) $(C_SOURCES:.c=.d)
