@@ -1,14 +1,36 @@
 #ifndef QRCODEDETECTOR_H
 #define QRCODEDETECTOR_H
 #include "FinderPatternInfo.h"
+#include "LuminanceImage.h"
 #include <memory>
 #include <vector>
 
 class FinderPattern;
+class AlignmentPattern;
+class ResultPoint;
 class QRCodeDetector
 {
 public:
+  class DetectorResult
+  {
+  public:
+    DetectorResult(std::unique_ptr<LuminanceImage>&& bits,
+                   std::unique_ptr<ResultPoint[]>&& points)
+    {
+      this->bits = std::move(bits);
+      this->points = std::move(points);
+    }
+
+    const LuminanceImage& getBits() const { return *bits; }
+
+    const ResultPoint* getPoints() const { return points.get(); }
+  private:
+    std::unique_ptr<LuminanceImage> bits;
+    std::unique_ptr<ResultPoint[]> points;
+  };
   FinderPatternInfo detect(int width, int height, const uint8_t* data);
+  std::unique_ptr<DetectorResult> processFinderPatternInfo(
+    const FinderPatternInfo& info);
 
 private:
   float crossCheckVertical(int startI, int centerJ, int maxCount,
@@ -21,16 +43,20 @@ private:
   bool haveMultiplyConfirmedCenters();
   std::unique_ptr<FinderPattern[]> selectBestPatterns();
   int findRowSkip();
+  float sizeOfBlackWhiteBlackRun(int fromX, int fromY, int toX, int toY);
+  float sizeOfBlackWhiteBlackRunBothWays(int fromX, int fromY, int toX,
+                                         int toY);
+  float calculateModuleSizeOneWay(const ResultPoint* pattern,
+                                  const ResultPoint* otherPattern);
+  float calculateModuleSize(const ResultPoint* topLeft,
+                            const ResultPoint* topRight,
+                            const ResultPoint* bottomLeft);
 
-  class Image
-  {
-  public:
-    int m_width;
-    int m_height;
-    const uint8_t* m_data;
-    bool get(int x, int y) const;
-  };
-  Image m_image;
+  std::unique_ptr<AlignmentPattern> findAlignmentInRegion(
+    float overallEstModuleSize, int estAlignmentX, int estAlignmentY,
+    float allowanceFactor);
+
+  LuminanceImage image;
   typedef std::unique_ptr<FinderPattern> FinderPatternPtr;
   typedef std::vector<FinderPatternPtr> FinderPatterVec;
   FinderPatterVec m_possibleCenters;

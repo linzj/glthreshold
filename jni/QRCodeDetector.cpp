@@ -1,5 +1,9 @@
 #include "QRCodeDetector.h"
+#include "AlignmentPatternFinder.h"
+#include "DefaultGridSampler.h"
 #include "FinderPattern.h"
+#include "PerspectiveTransform.h"
+#include "Version.h"
 #include <algorithm>
 #include <cmath>
 #include <string.h>
@@ -7,12 +11,6 @@ static const int MIN_SKIP = 3; // 1 pixel/module times 3 modules/center
 static const int CENTER_QUORUM = 2;
 static const int MAX_MODULES =
   57; // support up to version 10 for mobile clients
-
-bool
-QRCodeDetector::Image::get(int x, int y) const
-{
-  return !m_data[y * m_width + x];
-}
 
 static bool
 foundPatternCross(int stateCount[5])
@@ -48,7 +46,6 @@ float
 QRCodeDetector::crossCheckVertical(int startI, int centerJ, int maxCount,
                                    int originalStateCountTotal)
 {
-  const Image& image = m_image;
   int maxI = image.m_height;
   int stateCount[5];
   memset(stateCount, 0, sizeof(stateCount));
@@ -119,7 +116,6 @@ float
 QRCodeDetector::crossCheckHorizontal(int startJ, int centerI, int maxCount,
                                      int originalStateCountTotal)
 {
-  const Image& image = m_image;
 
   int maxJ = image.m_width;
   int stateCount[5];
@@ -188,7 +184,6 @@ bool
 QRCodeDetector::crossCheckDiagonal(int startI, int centerJ, int maxCount,
                                    int originalStateCountTotal)
 {
-  const Image& image = m_image;
   int stateCount[5];
   memset(stateCount, 0, sizeof(stateCount));
 
@@ -315,9 +310,7 @@ QRCodeDetector::detect(int width, int height, const uint8_t* data)
 {
   bool tryHarder = false;
   bool pureBarcode = true;
-  m_image.m_width = width;
-  m_image.m_height = height;
-  m_image.m_data = data;
+  image.reset(width, height, data);
   hasSkipped = false;
   int maxI = height;
   int maxJ = width;
@@ -338,7 +331,6 @@ QRCodeDetector::detect(int width, int height, const uint8_t* data)
 
   bool done = false;
   int stateCount[5];
-  const Image& image = m_image;
   for (int i = iSkip - 1; i < maxI && !done; i += iSkip) {
     // Get a row of black/white values
     memset(stateCount, 0, sizeof(stateCount));
@@ -563,4 +555,285 @@ QRCodeDetector::findRowSkip()
     }
   }
   return 0;
+}
+
+float
+QRCodeDetector::sizeOfBlackWhiteBlackRun(int fromX, int fromY, int toX, int toY)
+{
+  // Mild variant of Bresenham's algorithm;
+  // see http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+  bool steep = std::abs(toY - fromY) > std::abs(toX - fromX);
+  if (steep) {
+    int temp = fromX;
+    fromX = fromY;
+    fromY = temp;
+    temp = toX;
+    toX = toY;
+    toY = temp;
+  }
+
+  int dx = std::abs(toX - fromX);
+  int dy = std::abs(toY - fromY);
+  int error = -dx / 2;
+  int xstep = fromX < toX ? 1 : -1;
+  int ystep = fromY < toY ? 1 : -1;
+
+  // In black pixels, looking for white, first or second time.
+  int state = 0;
+  // Loop up until x == toX, but not beyond
+  int xLimit = toX + xstep;
+  for (int x = fromX, y = fromY; x != xLimit; x += xstep) {
+    int realX = steep ? y : x;
+    int realY = steep ? x : y;
+
+    // Does current pixel mean we have moved white to black or vice versa?
+    // Scanning black in state 0,2 and white in state 1, so if we find the wrong
+    // color, advance to next state or end if we are in state 2 already
+    if ((state == 1) == image.get(realX, realY)) {
+      if (state == 2) {
+        return mdistance(x, y, fromX, fromY);
+      }
+      state++;
+    }
+
+    error += dy;
+    if (error > 0) {
+      if (y == toY) {
+        break;
+      }
+      y += ystep;
+      error -= dx;
+    }
+  }
+  // Found black-white-black; give the benefit of the doubt that the next pixel
+  // outside the image
+  // is "white" so this last point at (toX+xStep,toY) is the right ending. This
+  // is really a
+  // small approximation; (toX+xStep,toY+yStep) might be really correct. Ignore
+  // this.
+  if (state == 2) {
+    return mdistance(toX + xstep, toY, fromX, fromY);
+  }
+  // else we didn't find even black-white-black; no estimate is really possible
+  return NAN;
+}
+
+float
+QRCodeDetector::sizeOfBlackWhiteBlackRunBothWays(int fromX, int fromY, int toX,
+                                                 int toY)
+{
+  float result = sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
+
+  // Now count other way -- don't run off image though of course
+  float scale = 1.0f;
+  int otherToX = fromX - (toX - fromX);
+  if (otherToX < 0) {
+    scale = (float)fromX / (float)(fromX - otherToX);
+    otherToX = 0;
+  } else if (otherToX >= image.getWidth()) {
+    scale = (float)(image.getWidth() - 1 - fromX) / (float)(otherToX - fromX);
+    otherToX = image.getWidth() - 1;
+  }
+  int otherToY = (int)(fromY - (toY - fromY) * scale);
+
+  scale = 1.0f;
+  if (otherToY < 0) {
+    scale = (float)fromY / (float)(fromY - otherToY);
+    otherToY = 0;
+  } else if (otherToY >= image.getHeight()) {
+    scale = (float)(image.getHeight() - 1 - fromY) / (float)(otherToY - fromY);
+    otherToY = image.getHeight() - 1;
+  }
+  otherToX = (int)(fromX + (otherToX - fromX) * scale);
+
+  result += sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
+
+  // Middle pixel is double-counted this way; subtract 1
+  return result - 1.0f;
+}
+
+float
+QRCodeDetector::calculateModuleSizeOneWay(const ResultPoint* pattern,
+                                          const ResultPoint* otherPattern)
+{
+  float moduleSizeEst1 = sizeOfBlackWhiteBlackRunBothWays(
+    (int)pattern->getX(), (int)pattern->getY(), (int)otherPattern->getX(),
+    (int)otherPattern->getY());
+  float moduleSizeEst2 = sizeOfBlackWhiteBlackRunBothWays(
+    (int)otherPattern->getX(), (int)otherPattern->getY(), (int)pattern->getX(),
+    (int)pattern->getY());
+  if (isnanf(moduleSizeEst1)) {
+    return moduleSizeEst2 / 7.0f;
+  }
+  if (isnanf(moduleSizeEst2)) {
+    return moduleSizeEst1 / 7.0f;
+  }
+  // Average them, and divide by 7 since we've counted the width of 3 black
+  // modules,
+  // and 1 white and 1 black module on either side. Ergo, divide sum by 14.
+  return (moduleSizeEst1 + moduleSizeEst2) / 14.0f;
+}
+
+float
+QRCodeDetector::calculateModuleSize(const ResultPoint* topLeft,
+                                    const ResultPoint* topRight,
+                                    const ResultPoint* bottomLeft)
+{
+  // Take the average
+  return (calculateModuleSizeOneWay(topLeft, topRight) +
+          calculateModuleSizeOneWay(topLeft, bottomLeft)) /
+         2.0f;
+}
+
+static int
+computeDimension(const ResultPoint* topLeft, const ResultPoint* topRight,
+                 const ResultPoint* bottomLeft, float moduleSize)
+{
+  int tltrCentersDimension =
+    std::roundf(ResultPoint::distance(*topLeft, *topRight) / moduleSize);
+  int tlblCentersDimension =
+    std::roundf(ResultPoint::distance(*topLeft, *bottomLeft) / moduleSize);
+  int dimension = ((tltrCentersDimension + tlblCentersDimension) / 2) + 7;
+  switch (dimension & 0x03) { // mod 4
+    case 0:
+      dimension++;
+      break;
+    // 1? do nothing
+    case 2:
+      dimension--;
+      break;
+    case 3:
+      throw 1;
+  }
+  return dimension;
+}
+
+std::unique_ptr<AlignmentPattern>
+QRCodeDetector::findAlignmentInRegion(float overallEstModuleSize,
+                                      int estAlignmentX, int estAlignmentY,
+                                      float allowanceFactor)
+{
+  // Look for an alignment pattern (3 modules in size) around where it
+  // should be
+  int allowance = (int)(allowanceFactor * overallEstModuleSize);
+  int alignmentAreaLeftX = std::max(0, estAlignmentX - allowance);
+  int alignmentAreaRightX =
+    std::min(image.getWidth() - 1, estAlignmentX + allowance);
+  if (alignmentAreaRightX - alignmentAreaLeftX < overallEstModuleSize * 3) {
+    throw 1;
+  }
+
+  int alignmentAreaTopY = std::max(0, estAlignmentY - allowance);
+  int alignmentAreaBottomY =
+    std::min(image.getHeight() - 1, estAlignmentY + allowance);
+  if (alignmentAreaBottomY - alignmentAreaTopY < overallEstModuleSize * 3) {
+    throw 1;
+  }
+
+  AlignmentPatternFinder alignmentFinder(
+    &image, alignmentAreaLeftX, alignmentAreaTopY,
+    alignmentAreaRightX - alignmentAreaLeftX,
+    alignmentAreaBottomY - alignmentAreaTopY, overallEstModuleSize);
+  return alignmentFinder.find();
+}
+
+static std::unique_ptr<PerspectiveTransform>
+createTransform(const ResultPoint* topLeft, const ResultPoint* topRight,
+                const ResultPoint* bottomLeft,
+                const ResultPoint* alignmentPattern, int dimension)
+{
+  float dimMinusThree = (float)dimension - 3.5f;
+  float bottomRightX;
+  float bottomRightY;
+  float sourceBottomRightX;
+  float sourceBottomRightY;
+  if (alignmentPattern) {
+    bottomRightX = alignmentPattern->getX();
+    bottomRightY = alignmentPattern->getY();
+    sourceBottomRightX = dimMinusThree - 3.0f;
+    sourceBottomRightY = sourceBottomRightX;
+  } else {
+    // Don't have an alignment pattern, just make up the bottom-right point
+    bottomRightX = (topRight->getX() - topLeft->getX()) + bottomLeft->getX();
+    bottomRightY = (topRight->getY() - topLeft->getY()) + bottomLeft->getY();
+    sourceBottomRightX = dimMinusThree;
+    sourceBottomRightY = dimMinusThree;
+  }
+
+  return PerspectiveTransform::quadrilateralToQuadrilateral(
+    3.5f, 3.5f, dimMinusThree, 3.5f, sourceBottomRightX, sourceBottomRightY,
+    3.5f, dimMinusThree, topLeft->getX(), topLeft->getY(), topRight->getX(),
+    topRight->getY(), bottomRightX, bottomRightY, bottomLeft->getX(),
+    bottomLeft->getY());
+}
+
+static std::unique_ptr<LuminanceImage>
+sampleGrid(const LuminanceImage& image, PerspectiveTransform& transform,
+           int dimension)
+{
+
+  DefaultGridSampler sampler;
+  return std::move(sampler.sampleGrid(image, dimension, dimension, transform));
+}
+
+std::unique_ptr<QRCodeDetector::DetectorResult>
+QRCodeDetector::processFinderPatternInfo(const FinderPatternInfo& info)
+{
+
+  const FinderPattern* topLeft = info.getTopLeft();
+  const FinderPattern* topRight = info.getTopRight();
+  const FinderPattern* bottomLeft = info.getBottomLeft();
+
+  float moduleSize = calculateModuleSize(topLeft, topRight, bottomLeft);
+  if (moduleSize < 1.0f) {
+    throw 1;
+  }
+  int dimension = computeDimension(topLeft, topRight, bottomLeft, moduleSize);
+  const Version& provisionalVersion =
+    Version::getProvisionalVersionForDimension(dimension);
+  int modulesBetweenFPCenters = provisionalVersion.getDimensionForVersion() - 7;
+
+  std::unique_ptr<AlignmentPattern> alignmentPattern;
+  // Anything above version 1 has an alignment pattern
+  if (provisionalVersion.getAlignmentPatternCenters().size() > 0) {
+
+    // Guess where a "bottom right" finder pattern would have been
+    float bottomRightX =
+      topRight->getX() - topLeft->getX() + bottomLeft->getX();
+    float bottomRightY =
+      topRight->getY() - topLeft->getY() + bottomLeft->getY();
+
+    // Estimate that alignment pattern is closer by 3 modules
+    // from "bottom right" to known top left location
+    float correctionToTopLeft = 1.0f - 3.0f / (float)modulesBetweenFPCenters;
+    int estAlignmentX =
+      (int)(topLeft->getX() +
+            correctionToTopLeft * (bottomRightX - topLeft->getX()));
+    int estAlignmentY =
+      (int)(topLeft->getY() +
+            correctionToTopLeft * (bottomRightY - topLeft->getY()));
+
+    // Kind of arbitrary -- expand search radius before giving up
+    for (int i = 4; i <= 16; i <<= 1) {
+      alignmentPattern = std::move(findAlignmentInRegion(
+        moduleSize, estAlignmentX, estAlignmentY, (float)i));
+    }
+    // If we didn't find alignment pattern... well try anyway without it
+  }
+
+  std::unique_ptr<PerspectiveTransform> transform = createTransform(
+    topLeft, topRight, bottomLeft, alignmentPattern.get(), dimension);
+
+  std::unique_ptr<LuminanceImage> bits =
+    sampleGrid(image, *transform, dimension);
+
+  std::unique_ptr<ResultPoint[]> points;
+  if (!alignmentPattern.get()) {
+    points.reset(new ResultPoint[3]{ *bottomLeft, *topLeft, *topRight });
+  } else {
+    points.reset(new ResultPoint[4]{ *bottomLeft, *topLeft, *topRight,
+                                     *alignmentPattern });
+  }
+  return std::unique_ptr<DetectorResult>(
+    new DetectorResult(std::move(bits), std::move(points)));
 }

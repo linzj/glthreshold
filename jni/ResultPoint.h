@@ -1,14 +1,23 @@
 #ifndef RESULTPOINT_H
 #define RESULTPOINT_H
+#include <cmath>
+
+inline static float
+mdistance(float aX, float aY, float bX, float bY)
+{
+  float xDiff = aX - bX;
+  float yDiff = aY - bY;
+  return sqrtf(xDiff * xDiff + yDiff * yDiff);
+}
 
 class ResultPoint
 {
 
 public:
   ResultPoint(float x, float y);
-  inline float getX() { return x; }
+  inline float getX() const { return x; }
 
-  inline float getY() { return y; }
+  inline float getY() const { return y; }
 
   static void orderBestPatterns(ResultPoint* patterns);
 

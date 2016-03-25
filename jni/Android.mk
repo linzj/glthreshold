@@ -28,6 +28,13 @@ log.cpp \
 GLContextManager.cpp \
 BinarizeProcessor.cpp \
 BinarizeProcessorCPU.cpp \
+AlignmentPattern.cpp \
+AlignmentPatternFinder.cpp \
+DefaultGridSampler.cpp \
+GridSampler.cpp \
+LuminanceImage.cpp \
+PerspectiveTransform.cpp \
+Version.cpp \
 GLResources.cpp \
 GLCommon.cpp \
 GLProgramManager.cpp \

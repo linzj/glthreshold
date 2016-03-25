@@ -9,11 +9,11 @@ class FinderPatternInfo
 public:
   FinderPatternInfo(std::unique_ptr<FinderPattern[]>&& patternCenters);
 
-  inline FinderPattern* getBottomLeft() { return bottomLeft; }
+  inline const FinderPattern* getBottomLeft() const { return bottomLeft; }
 
-  inline FinderPattern* getTopLeft() { return topLeft; }
+  inline const FinderPattern* getTopLeft() const { return topLeft; }
 
-  inline FinderPattern* getTopRight() { return topRight; }
+  inline const FinderPattern* getTopRight() const { return topRight; }
 
 private:
   FinderPattern* bottomLeft;

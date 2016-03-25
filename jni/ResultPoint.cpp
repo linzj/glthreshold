@@ -49,14 +49,6 @@ ResultPoint::orderBestPatterns(ResultPoint* patterns)
   patterns[2] = pointC;
 }
 
-static float
-mdistance(float aX, float aY, float bX, float bY)
-{
-  float xDiff = aX - bX;
-  float yDiff = aY - bY;
-  return sqrtf(xDiff * xDiff + yDiff * yDiff);
-}
-
 float
 ResultPoint::distance(const ResultPoint& pattern1, const ResultPoint& pattern2)
 {

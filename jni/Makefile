@@ -29,6 +29,13 @@ BinarizeProcessorCPU.cpp \
 FinderPattern.cpp \
 FinderPatternInfo.cpp \
 QRCodeDetector.cpp \
+AlignmentPattern.cpp \
+AlignmentPatternFinder.cpp \
+DefaultGridSampler.cpp \
+GridSampler.cpp \
+LuminanceImage.cpp \
+PerspectiveTransform.cpp \
+Version.cpp \
 ResultPoint.cpp \
 GLResources.cpp \
 GLCommon.cpp \
