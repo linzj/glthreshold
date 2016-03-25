@@ -15,7 +15,6 @@ DefaultGridSampler::sampleGrid(const LuminanceImage& image, int dimensionX,
     PerspectiveTransform::quadrilateralToQuadrilateral(
       p1ToX, p1ToY, p2ToX, p2ToY, p3ToX, p3ToY, p4ToX, p4ToY, p1FromX, p1FromY,
       p2FromX, p2FromY, p3FromX, p3FromY, p4FromX, p4FromY);
-
   return sampleGrid(image, dimensionX, dimensionY, *transform);
 }
 
@@ -29,22 +28,26 @@ DefaultGridSampler::sampleGrid(const LuminanceImage& image, int dimensionX,
   }
   std::unique_ptr<LuminanceImage> bits(
     new LuminanceImage(dimensionX, dimensionY));
-  std::vector<float> points(2 * dimensionX, 0.0f);
-  for (int y = 0; y < dimensionY; y++) {
-    int max = points.size();
-    float iValue = (float)y + 0.5f;
-    for (int x = 0; x < max; x += 2) {
-      points[x] = (float)(x / 2) + 0.5f;
-      points[x + 1] = iValue;
-    }
-    transform.transformPoints(points);
-    // Quick check to see if points transformed to something inside the image;
-    // sufficient to check the endpoints
-    checkAndNudgePoints(image, points);
-    for (int x = 0; x < max; x += 2) {
-      if (image.get((int)points[x], (int)points[x + 1])) {
-        // Black(-ish) pixel
-        bits->set(x / 2, y);
+#pragma omp parallel
+  {
+#pragma omp parallel for
+    for (int y = 0; y < dimensionY; y++) {
+      std::vector<float> points(2 * dimensionX, 0.0f);
+      int max = points.size();
+      float iValue = (float)y + 0.5f;
+      for (int x = 0; x < max; x += 2) {
+        points[x] = (float)(x / 2) + 0.5f;
+        points[x + 1] = iValue;
+      }
+      transform.transformPoints(points);
+      // Quick check to see if points transformed to something inside the image;
+      // sufficient to check the endpoints
+      checkAndNudgePoints(image, points);
+      for (int x = 0; x < max; x += 2) {
+        if (image.get((int)points[x], (int)points[x + 1])) {
+          // Black(-ish) pixel
+          bits->set(x / 2, y);
+        }
       }
     }
   }
