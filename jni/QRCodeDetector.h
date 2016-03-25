@@ -28,11 +28,12 @@ public:
     std::unique_ptr<LuminanceImage> bits;
     std::unique_ptr<ResultPoint[]> points;
   };
-  FinderPatternInfo detect(int width, int height, const uint8_t* data);
-  std::unique_ptr<DetectorResult> processFinderPatternInfo(
-    const FinderPatternInfo& info);
+  std::unique_ptr<DetectorResult> detect(int width, int height,
+                                         const uint8_t* data);
 
 private:
+  typedef std::unique_ptr<FinderPattern> FinderPatternPtr;
+  typedef std::vector<FinderPatternPtr> FinderPatternVec;
   float crossCheckVertical(int startI, int centerJ, int maxCount,
                            int originalStateCountTotal);
   float crossCheckHorizontal(int startJ, int centerI, int maxCount,
@@ -41,7 +42,7 @@ private:
                           int originalStateCountTotal);
   bool handlePossibleCenter(int stateCount[5], int i, int j, bool pureBarcode);
   bool haveMultiplyConfirmedCenters();
-  std::unique_ptr<FinderPattern[]> selectBestPatterns();
+  FinderPatternVec selectBestPatterns();
   int findRowSkip();
   float sizeOfBlackWhiteBlackRun(int fromX, int fromY, int toX, int toY);
   float sizeOfBlackWhiteBlackRunBothWays(int fromX, int fromY, int toX,
@@ -56,10 +57,11 @@ private:
     float overallEstModuleSize, int estAlignmentX, int estAlignmentY,
     float allowanceFactor);
 
+  std::unique_ptr<DetectorResult> processFinderPatternInfo(
+    const FinderPatternInfo& info);
+
   LuminanceImage image;
-  typedef std::unique_ptr<FinderPattern> FinderPatternPtr;
-  typedef std::vector<FinderPatternPtr> FinderPatterVec;
-  FinderPatterVec m_possibleCenters;
+  FinderPatternVec m_possibleCenters;
   bool hasSkipped;
 };
 

@@ -1,13 +1,15 @@
 #ifndef FINDERPATTERNINFO_H
 #define FINDERPATTERNINFO_H
 #include <memory>
+#include <vector>
 
 class FinderPattern;
 class FinderPatternInfo
 {
 
 public:
-  FinderPatternInfo(std::unique_ptr<FinderPattern[]>&& patternCenters);
+  FinderPatternInfo(
+    std::vector<std::unique_ptr<FinderPattern>>&& patternCenters);
 
   inline const FinderPattern* getBottomLeft() const { return bottomLeft; }
 
@@ -19,7 +21,7 @@ private:
   FinderPattern* bottomLeft;
   FinderPattern* topLeft;
   FinderPattern* topRight;
-  std::unique_ptr<FinderPattern[]> m_storage;
+  std::vector<std::unique_ptr<FinderPattern>> m_storage;
 };
 
 #endif /* FINDERPATTERNINFO_H */

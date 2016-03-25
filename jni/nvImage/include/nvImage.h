@@ -95,6 +95,10 @@ namespace nv {
 
         //save an image to a file
         NVSDKENTRY bool saveImageToFile( const char* file);
+        inline bool get(int x, int y) const {
+            const uint8_t* p = static_cast<const uint8_t*>(getLevel(0));
+            return !p[_width * y + x];
+        }
 
     protected:
         int _width;

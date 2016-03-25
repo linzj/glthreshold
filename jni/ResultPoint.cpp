@@ -6,17 +6,17 @@ ResultPoint::ResultPoint(float x, float y)
   this->y = y;
 }
 void
-ResultPoint::orderBestPatterns(ResultPoint* patterns)
+ResultPoint::orderBestPatterns(const ResultPoint** patterns)
 {
 
   // Find distances between pattern centers
-  float zeroOneDistance = distance(patterns[0], patterns[1]);
-  float oneTwoDistance = distance(patterns[1], patterns[2]);
-  float zeroTwoDistance = distance(patterns[0], patterns[2]);
+  float zeroOneDistance = distance(*patterns[0], *patterns[1]);
+  float oneTwoDistance = distance(*patterns[1], *patterns[2]);
+  float zeroTwoDistance = distance(*patterns[0], *patterns[2]);
 
-  ResultPoint pointA;
-  ResultPoint pointB;
-  ResultPoint pointC;
+  const ResultPoint* pointA;
+  const ResultPoint* pointB;
+  const ResultPoint* pointC;
   // Assume one closest to other two is B; A and C will just be guesses at first
   if (oneTwoDistance >= zeroOneDistance && oneTwoDistance >= zeroTwoDistance) {
     pointB = patterns[0];
@@ -38,8 +38,8 @@ ResultPoint::orderBestPatterns(ResultPoint* patterns)
   // arrangement
   // we want for A, B, C. If it's negative, then we've got it flipped around and
   // should swap A and C.
-  if (crossProductZ(pointA, pointB, pointC) < 0.0f) {
-    ResultPoint temp = pointA;
+  if (crossProductZ(*pointA, *pointB, *pointC) < 0.0f) {
+    const ResultPoint* temp = pointA;
     pointA = pointC;
     pointC = temp;
   }

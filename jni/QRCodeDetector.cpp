@@ -305,11 +305,11 @@ QRCodeDetector::handlePossibleCenter(int stateCount[5], int i, int j,
   return false;
 }
 
-FinderPatternInfo
+std::unique_ptr<QRCodeDetector::DetectorResult>
 QRCodeDetector::detect(int width, int height, const uint8_t* data)
 {
   bool tryHarder = false;
-  bool pureBarcode = true;
+  bool pureBarcode = false;
   image.reset(width, height, data);
   hasSkipped = false;
   int maxI = height;
@@ -416,13 +416,14 @@ QRCodeDetector::detect(int width, int height, const uint8_t* data)
     }
   }
 
-  std::unique_ptr<FinderPattern[]> patternInfo = selectBestPatterns();
-  if (!patternInfo.get()) {
-    return FinderPatternInfo(std::move(patternInfo));
+  auto patternInfo = selectBestPatterns();
+  if (patternInfo.empty()) {
+    return processFinderPatternInfo(FinderPatternInfo(std::move(patternInfo)));
   }
-  ResultPoint::orderBestPatterns(patternInfo.get());
+  ResultPoint::orderBestPatterns(
+    reinterpret_cast<const ResultPoint**>(patternInfo.data()));
 
-  return FinderPatternInfo(std::move(patternInfo));
+  return processFinderPatternInfo(FinderPatternInfo(std::move(patternInfo)));
 }
 
 bool
@@ -455,14 +456,14 @@ QRCodeDetector::haveMultiplyConfirmedCenters()
   return totalDeviation <= 0.05f * totalModuleSize;
 }
 
-std::unique_ptr<FinderPattern[]>
+QRCodeDetector::FinderPatternVec
 QRCodeDetector::selectBestPatterns()
 {
 
   int startSize = m_possibleCenters.size();
   if (startSize < 3) {
     // Couldn't find enough finder patterns
-    return std::unique_ptr<FinderPattern[]>();
+    return FinderPatternVec();
   }
 
   // Filter outlier possibilities whose module size is too different
@@ -523,10 +524,7 @@ QRCodeDetector::selectBestPatterns()
 
     m_possibleCenters.resize(3);
   }
-  FinderPatterVec tmp(std::move(m_possibleCenters));
-
-  return std::unique_ptr<FinderPattern[]>(
-    new FinderPattern[3]{ *tmp.at(0), *tmp.at(1), *tmp.at(2) });
+  return std::move(m_possibleCenters);
 }
 
 int
@@ -779,7 +777,6 @@ sampleGrid(const LuminanceImage& image, PerspectiveTransform& transform,
 std::unique_ptr<QRCodeDetector::DetectorResult>
 QRCodeDetector::processFinderPatternInfo(const FinderPatternInfo& info)
 {
-
   const FinderPattern* topLeft = info.getTopLeft();
   const FinderPattern* topRight = info.getTopRight();
   const FinderPattern* bottomLeft = info.getBottomLeft();

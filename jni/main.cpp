@@ -199,26 +199,6 @@ main(int argc, char** argv)
     }
     clock_gettime(CLOCK_MONOTONIC, &t2);
 
-#else
-  {
-    struct timespec t1, t2;
-    clock_gettime(CLOCK_MONOTONIC, &t1);
-    uint8_t* procp;
-    std::unique_ptr<uint8_t[]> processed(
-      binarizeProcessCPU(image->getWidth(), image->getHeight(),
-                         static_cast<const uint8_t*>(image->getLevel(0))));
-    QRCodeDetector detector;
-    clock_gettime(CLOCK_MONOTONIC, &t2);
-    FinderPatternInfo fi =
-      detector.detect(image->getWidth(), image->getHeight(), processed.get());
-    if (fi.getBottomLeft())
-      printf("found at (%lf, %lf), (%lf, %lf), (%lf, %lf).\n",
-             fi.getBottomLeft()->getX(), fi.getBottomLeft()->getY(),
-             fi.getTopLeft()->getX(), fi.getTopLeft()->getY(),
-             fi.getTopRight()->getX(), fi.getTopRight()->getY());
-    else
-      printf("not found.\n");
-#endif
     int rowBytes = (image->getWidth() * 24 + 31) / 32 * 4;
     std::unique_ptr<uint8_t[]> saveBits(
       new uint8_t[rowBytes * image->getHeight()]);
@@ -230,36 +210,72 @@ main(int argc, char** argv)
         rowp[0] = *procp;
         rowp[1] = *procp;
         rowp[2] = *procp;
-#if defined(USE_CPU)
-        if (fi.getBottomLeft()) {
-          if (std::abs(x - fi.getBottomLeft()->getX()) < 5 &&
-              std::abs(y - fi.getBottomLeft()->getY()) < 5) {
-            rowp[0] = 0;
-            rowp[1] = 0;
-            rowp[2] = 255;
-          }
-        }
-        if (fi.getBottomLeft()) {
-          if (std::abs(x - fi.getTopLeft()->getX()) < 5 &&
-              std::abs(y - fi.getTopLeft()->getY()) < 5) {
-            rowp[0] = 0;
-            rowp[1] = 0;
-            rowp[2] = 255;
-          }
-        }
-        if (fi.getBottomLeft()) {
-          if (std::abs(x - fi.getTopRight()->getX()) < 5 &&
-              std::abs(y - fi.getTopRight()->getY()) < 5) {
-            rowp[0] = 0;
-            rowp[1] = 0;
-            rowp[2] = 255;
-          }
-        }
-#endif
       }
     }
     saveBitmap(image->getWidth(), image->getHeight(), BITMAP_PATH,
                reinterpret_cast<char*>(saveBits.get()));
+#else
+  {
+    struct timespec t1, t2;
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    uint8_t* procp;
+    std::unique_ptr<uint8_t[]> processed(
+      binarizeProcessCPU(image->getWidth(), image->getHeight(),
+                         static_cast<const uint8_t*>(image->getLevel(0))));
+    QRCodeDetector detector;
+    std::unique_ptr<QRCodeDetector::DetectorResult> result =
+      detector.detect(image->getWidth(), image->getHeight(), processed.get());
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+    if (result.get()) {
+      printf("found at (%lf, %lf), (%lf, %lf), (%lf, %lf), (%lf, %lf).\n",
+             result->getPoints()[0].getX(), result->getPoints()[0].getY(),
+             result->getPoints()[1].getX(), result->getPoints()[1].getY(),
+             result->getPoints()[2].getX(), result->getPoints()[2].getY(),
+             result->getPoints()[3].getX(), result->getPoints()[3].getY());
+      auto&& limage = image;
+      int rowBytes = (limage->getWidth() * 24 + 31) / 32 * 4;
+      std::unique_ptr<uint8_t[]> saveBits(
+        new uint8_t[rowBytes * limage->getHeight()]);
+      uint8_t* savep = saveBits.get();
+      procp = processed.get();
+      for (int y = 0; y < limage->getHeight(); ++y, savep += rowBytes) {
+        uint8_t* rowp = savep;
+        for (int x = 0; x < limage->getWidth(); ++x, ++procp, rowp += 3) {
+          int black = (int)!limage->get(x, y);
+          rowp[0] = black * 255;
+          rowp[1] = black * 255;
+          rowp[2] = black * 255;
+          if (std::abs(x - result->getPoints()[0].getX()) < 5 &&
+              std::abs(y - result->getPoints()[0].getY()) < 5) {
+            rowp[0] = 0;
+            rowp[1] = 0;
+            rowp[2] = 255;
+          }
+          if (std::abs(x - result->getPoints()[1].getX()) < 5 &&
+              std::abs(y - result->getPoints()[1].getY()) < 5) {
+            rowp[0] = 0;
+            rowp[1] = 0;
+            rowp[2] = 255;
+          }
+          if (std::abs(x - result->getPoints()[2].getX()) < 5 &&
+              std::abs(y - result->getPoints()[2].getY()) < 5) {
+            rowp[0] = 0;
+            rowp[1] = 0;
+            rowp[2] = 255;
+          }
+          if (std::abs(x - result->getPoints()[3].getX()) < 5 &&
+              std::abs(y - result->getPoints()[3].getY()) < 5) {
+            rowp[0] = 0;
+            rowp[1] = 0;
+            rowp[2] = 255;
+          }
+        }
+      }
+      saveBitmap(limage->getWidth(), limage->getHeight(), BITMAP_PATH,
+                 reinterpret_cast<char*>(saveBits.get()));
+    } else
+      printf("not found.\n");
+#endif
 
     printf("one frame: %lf.\n", ((double)(t2.tv_sec - t1.tv_sec) +
                                  ((double)(t2.tv_nsec - t1.tv_nsec) / 1e9)));

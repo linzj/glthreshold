@@ -19,7 +19,7 @@ public:
 
   inline float getY() const { return y; }
 
-  static void orderBestPatterns(ResultPoint* patterns);
+  static void orderBestPatterns(const ResultPoint** patterns);
 
   static float distance(const ResultPoint& pattern1,
                         const ResultPoint& pattern2);
