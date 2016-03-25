@@ -190,13 +190,8 @@ main(int argc, char** argv)
     ImageDesc desc = { image->getWidth(), image->getHeight(),
                        image->getFormat(), image->getLevel(0) };
     ImageOutput imo = wf.process(glContextManager.getGL3Interfaces(), desc);
-    std::unique_ptr<uint8_t[]> readback(std::move(imo.outputBytes));
-    std::unique_ptr<uint8_t[]> processed(new uint8_t[desc.width * desc.height]);
-    const uint8_t* rbp = readback.get();
+    std::unique_ptr<uint8_t[]> processed(std::move(imo.outputBytes));
     procp = processed.get();
-    for (int i = 0; i < desc.width * desc.height; ++i, ++procp, rbp += 4) {
-      *procp = *rbp;
-    }
     clock_gettime(CLOCK_MONOTONIC, &t2);
 
     int rowBytes = (image->getWidth() * 24 + 31) / 32 * 4;

@@ -1,7 +1,6 @@
 ---binarizerSum
 #version 310 es
 layout(local_size_x = 1, local_size_y = 1) in;
-layout(binding = 0) uniform highp sampler2D u_Texture;
 
 #define LUMINANCE_BITS  5
 #define LUMINANCE_SHIFT  (8 - LUMINANCE_BITS)
@@ -17,11 +16,16 @@ layout(binding = 0) coherent buffer ROWSUM
   rowsum s[];
 } globalRowSum;
 
+layout(binding = 6) buffer INPUTCOLOR
+{
+  highp int color[];
+} inputcolor;
+
 void main()
 {
   highp int y = int(gl_GlobalInvocationID.y);
 
-  highp int r = int(texelFetch(u_Texture, ivec2(gl_GlobalInvocationID), 0).r * 255.0);
+  highp int r = inputcolor.color[gl_GlobalInvocationID.y * gl_NumWorkGroups.x + gl_GlobalInvocationID.x];
   
   highp int x = r >> LUMINANCE_SHIFT;
   atomicAdd(globalRowSum.s[y].sum[x], 1);
@@ -273,18 +277,28 @@ layout(binding = 5) coherent readonly buffer BESTVALLEY
     highp int p[];
 } bestvalley;
 layout(binding = 0) uniform highp sampler2D u_TextureIn;
-layout(rgba8, binding = 0) uniform highp writeonly image2D u_TextureOut;
+
+layout(binding = 6) buffer INPUTCOLOR
+{
+  highp int color[];
+} inputcolor;
+
+layout(binding = 7) buffer OUTPUTCOLOR
+{
+  highp int color[];
+} outputcolor;
 
 void main()
 {
-    highp float left = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(-1, 0), 0).r;
-    highp float center = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy), 0).r;
-    highp float right = texelFetch(u_TextureIn, ivec2(gl_GlobalInvocationID.xy) + ivec2(+1, 0), 0).r;
-    highp float blackpoint = float(bestvalley.p[gl_GlobalInvocationID.y] << LUMINANCE_SHIFT) / 255.0;
-    highp float luminance = ((center * 4.0) - left - right) / 2.0;
+    highp uint centerIndex = gl_GlobalInvocationID.y * (2U + gl_NumWorkGroups.x) + gl_GlobalInvocationID.x + 1U;
+    highp int left = inputcolor.color[centerIndex - 1U];
+    highp int center = inputcolor.color[centerIndex];
+    highp int right = inputcolor.color[centerIndex + 1U];
+    highp int blackpoint = bestvalley.p[gl_GlobalInvocationID.y] << LUMINANCE_SHIFT;
+    highp int luminance = ((center * 4) - left - right) / 2;
     if (luminance >= blackpoint) {
-        imageStore(u_TextureOut, ivec2(gl_GlobalInvocationID.xy), vec4(1.0));
+        outputcolor.color[centerIndex] = 255;
     } else {
-        imageStore(u_TextureOut, ivec2(gl_GlobalInvocationID.xy), vec4(0.0));
+        outputcolor.color[centerIndex] = 0;
     }
 }

@@ -75,7 +75,7 @@ BinarizeProcessor::process(const GL3Interfaces& interfaces,
     memset(ptr, 0, size);
     interfaces.glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
   }
-  std::shared_ptr<GLTexture> output = desc.wf->requestTextureForFramebuffer();
+  std::shared_ptr<GLBuffer> output = desc.wf->requestBuffer();
   offset = 0;
   interfaces.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, ssbo, offset,
                                rowSumSize);
@@ -94,10 +94,10 @@ BinarizeProcessor::process(const GL3Interfaces& interfaces,
   offset += bestValleyScoreSize;
   interfaces.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 5, ssbo, offset,
                                bestValleySize);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, desc.color->id());
-  interfaces.glBindImageTexture(0, output->id(), 0, GL_FALSE, 0, GL_WRITE_ONLY,
-                                GL_RGBA8);
+  interfaces.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 6, desc.color->id(), 0,
+                               desc.color->size());
+  interfaces.glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 7, output->id(), 0,
+                               output->size());
   glUseProgram(m_binarizerSum);
   interfaces.glDispatchCompute(desc.width, desc.height, 1);
   GL_CMD_BARRIER;
@@ -118,7 +118,7 @@ BinarizeProcessor::process(const GL3Interfaces& interfaces,
   GL_CMD_BARRIER;
 
   glUseProgram(m_binarizerAssign);
-  interfaces.glDispatchCompute(desc.width, desc.height, 1);
+  interfaces.glDispatchCompute(desc.width - 2, desc.height, 1);
   interfaces.glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
   glDeleteBuffers(1, &ssbo);
   checkError("BinarizeProcessor");

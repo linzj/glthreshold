@@ -4,19 +4,19 @@
 #include <memory>
 #include <stdint.h>
 
-class GLTexture;
+class GLBuffer;
 class ImageProcessorWorkflow;
 class GL3Interfaces;
 
 struct ProcessorOutput
 {
-  std::shared_ptr<GLTexture> color;
+  std::shared_ptr<GLBuffer> color;
 };
 
 struct ProcessorInput
 {
   GLint width, height;
-  std::shared_ptr<GLTexture> color;
+  std::shared_ptr<GLBuffer> color;
   ImageProcessorWorkflow* wf;
 };
 

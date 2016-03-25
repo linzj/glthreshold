@@ -17,7 +17,7 @@ struct ImageOutput
   std::unique_ptr<uint8_t[]> outputBytes;
 };
 
-class GLTexture;
+class GLBuffer;
 class IImageProcessor;
 class GL3Interfaces;
 
@@ -28,32 +28,13 @@ public:
   ~ImageProcessorWorkflow();
   void registerIImageProcessor(IImageProcessor* processor);
   ImageOutput process(const GL3Interfaces& interfaces, const ImageDesc& desc);
-  void enterFramebuffer();
-  void leaveFramebuffer();
-  GLint checkFramebuffer();
-  std::shared_ptr<GLTexture> requestTextureForFramebuffer();
-  void setColorAttachmentForFramebuffer(GLuint texture);
-  bool rebornTexture(GLuint texture);
+  std::shared_ptr<GLBuffer> requestBuffer();
 
 private:
-  void preallocateTextures();
-  void allocateTexture(GLuint texture, GLint width, GLint height, GLenum format,
-                       void* data = nullptr);
+  std::shared_ptr<GLBuffer> allocateBuffer(const void* data);
   std::vector<IImageProcessor*> m_processors;
-  std::vector<std::shared_ptr<GLTexture>> m_fbotextures;
-  GLuint m_fbo;
   GLint m_width, m_height;
   const GL3Interfaces* m_interfaces;
   bool m_staled;
-};
-
-class FBOScope
-{
-public:
-  explicit FBOScope(ImageProcessorWorkflow* wf);
-  ~FBOScope();
-
-private:
-  ImageProcessorWorkflow* m_wf;
 };
 #endif /* IMAGEPROCESSORWORKFLOW_H */
