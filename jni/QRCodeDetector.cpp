@@ -688,9 +688,9 @@ computeDimension(const ResultPoint* topLeft, const ResultPoint* topRight,
                  const ResultPoint* bottomLeft, float moduleSize)
 {
   int tltrCentersDimension =
-    std::roundf(ResultPoint::distance(*topLeft, *topRight) / moduleSize);
+    roundf(ResultPoint::distance(*topLeft, *topRight) / moduleSize);
   int tlblCentersDimension =
-    std::roundf(ResultPoint::distance(*topLeft, *bottomLeft) / moduleSize);
+    roundf(ResultPoint::distance(*topLeft, *bottomLeft) / moduleSize);
   int dimension = ((tltrCentersDimension + tlblCentersDimension) / 2) + 7;
   switch (dimension & 0x03) { // mod 4
     case 0:

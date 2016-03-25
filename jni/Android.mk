@@ -17,7 +17,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 OMPFLAGS := -fopenmp
 
-LOCAL_CXXFLAGS += -std=c++11
+LOCAL_CXXFLAGS += -std=c++11 -fexceptions
 LOCAL_CFLAGS += -I$(LOCAL_PATH)/nvImage/include -I$(LOCAL_PATH)/libpng-1.2.51 -O2 -Wall \
 				-DANDROID_LOGCAT_ENABLED \
 				-mfpu=neon $(OMPFLAGS)
@@ -30,6 +30,10 @@ BinarizeProcessor.cpp \
 BinarizeProcessorCPU.cpp \
 AlignmentPattern.cpp \
 AlignmentPatternFinder.cpp \
+QRCodeDetector.cpp \
+ResultPoint.cpp \
+FinderPatternInfo.cpp \
+FinderPattern.cpp \
 DefaultGridSampler.cpp \
 GridSampler.cpp \
 LuminanceImage.cpp \
