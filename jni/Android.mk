@@ -28,6 +28,7 @@ log.cpp \
 GLContextManager.cpp \
 BinarizeProcessor.cpp \
 BinarizeProcessorCPU.cpp \
+RGBToLuminance.cpp \
 AlignmentPattern.cpp \
 AlignmentPatternFinder.cpp \
 QRCodeDetector.cpp \

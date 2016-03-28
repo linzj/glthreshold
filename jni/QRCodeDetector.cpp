@@ -418,7 +418,7 @@ QRCodeDetector::detect(int width, int height, const uint8_t* data)
 
   auto patternInfo = selectBestPatterns();
   if (patternInfo.empty()) {
-    return processFinderPatternInfo(FinderPatternInfo(std::move(patternInfo)));
+    throw 1;
   }
   ResultPoint::orderBestPatterns(
     reinterpret_cast<const ResultPoint**>(patternInfo.data()));

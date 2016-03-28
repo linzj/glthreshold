@@ -26,6 +26,7 @@ GLContextManager.cpp \
 ImageProcessorWorkflow.cpp \
 BinarizeProcessor.cpp \
 BinarizeProcessorCPU.cpp \
+RGBToLuminance.cpp \
 FinderPattern.cpp \
 FinderPatternInfo.cpp \
 QRCodeDetector.cpp \

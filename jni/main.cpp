@@ -5,6 +5,7 @@
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
 #include "QRCodeDetector.h"
+#include "RGBToLuminance.h"
 #include <cmath>
 #include <memory>
 #include <nvImage.h>
@@ -219,9 +220,26 @@ main(int argc, char** argv)
     struct timespec t1, t2;
     clock_gettime(CLOCK_MONOTONIC, &t1);
     uint8_t* procp;
-    std::unique_ptr<uint8_t[]> processed(
-      binarizeProcessCPU(image->getWidth(), image->getHeight(),
-                         static_cast<const uint8_t*>(image->getLevel(0))));
+    std::unique_ptr<uint8_t[]> processed;
+    const void* data = image->getLevel(0);
+    switch (image->getFormat()) {
+      case GL_RGB:
+        processed = RGBToLuminance(image->getWidth(), image->getHeight(), data);
+        data = processed.get();
+        break;
+      case GL_RGBA:
+        processed =
+          RGBAToLuminance(image->getWidth(), image->getHeight(), data);
+        data = processed.get();
+        break;
+      case GL_LUMINANCE:
+        break;
+      default:
+        GLIMPROC_LOGE("unsupported format: %x.\n", image->getFormat());
+        abort();
+    }
+    processed = binarizeProcessCPU(image->getWidth(), image->getHeight(),
+                                   static_cast<const uint8_t*>(data));
     QRCodeDetector detector;
     std::unique_ptr<QRCodeDetector::DetectorResult> result =
       detector.detect(image->getWidth(), image->getHeight(), processed.get());
