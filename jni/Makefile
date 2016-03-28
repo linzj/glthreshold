@@ -32,6 +32,9 @@ FinderPatternInfo.cpp \
 QRCodeDetector.cpp \
 AlignmentPattern.cpp \
 AlignmentPatternFinder.cpp \
+FormatInformation.cpp \
+DataMask.cpp \
+ErrorCorrectionLevel.cpp \
 DefaultGridSampler.cpp \
 GridSampler.cpp \
 LuminanceImage.cpp \

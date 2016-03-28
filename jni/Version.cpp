@@ -1,4 +1,6 @@
 #include "Version.h"
+#include "FormatInformation.h"
+#include "LuminanceImage.h"
 #include <limits.h>
 #include <pthread.h>
 /**
@@ -61,23 +63,6 @@ Version::ensureInitialize()
   pthread_once(&once_control, buildVersions);
 }
 std::unique_ptr<Version[]> Version::VERSIONS;
-static const int BITS_SET_IN_HALF_BYTE[] = { 0, 1, 1, 2, 1, 2, 2, 3,
-                                             1, 2, 2, 3, 2, 3, 3, 4 };
-
-static int
-numBitsDiffering(unsigned a, unsigned b)
-{
-  a ^= b; // a now has a 1 bit exactly where its bit differs with b's
-  // Count bits set quickly with a series of lookups:
-  return BITS_SET_IN_HALF_BYTE[a & 0x0F] +
-         BITS_SET_IN_HALF_BYTE[(a >> 4) & 0x0F] +
-         BITS_SET_IN_HALF_BYTE[(a >> 8) & 0x0F] +
-         BITS_SET_IN_HALF_BYTE[(a >> 12) & 0x0F] +
-         BITS_SET_IN_HALF_BYTE[(a >> 16) & 0x0F] +
-         BITS_SET_IN_HALF_BYTE[(a >> 20) & 0x0F] +
-         BITS_SET_IN_HALF_BYTE[(a >> 24) & 0x0F] +
-         BITS_SET_IN_HALF_BYTE[(a >> 28) & 0x0F];
-}
 
 const Version*
 Version::decodeVersionInformation(int versionBits)
@@ -92,7 +77,8 @@ Version::decodeVersionInformation(int versionBits)
     }
     // Otherwise see if this is the closest to a real version info bit string
     // we have seen so far
-    int bitsDifference = numBitsDiffering(versionBits, targetVersion);
+    int bitsDifference =
+      FormatInformation::numBitsDiffering(versionBits, targetVersion);
     if (bitsDifference < bestDifference) {
       bestVersion = i + 7;
       bestDifference = bitsDifference;
@@ -304,4 +290,45 @@ ECBlocks::getNumBlocks()
     total += ecBlock.getCount();
   }
   return total;
+}
+
+std::unique_ptr<LuminanceImage>
+Version::buildFunctionPattern()
+{
+  int dimension = getDimensionForVersion();
+  std::unique_ptr<LuminanceImage> bitMatrix(new LuminanceImage(dimension));
+
+  // Top left finder pattern + separator + format
+  bitMatrix->setRegion(0, 0, 9, 9);
+  // Top right finder pattern + separator + format
+  bitMatrix->setRegion(dimension - 8, 0, 8, 9);
+  // Bottom left finder pattern + separator + format
+  bitMatrix->setRegion(0, dimension - 8, 9, 8);
+
+  // Alignment patterns
+  int max = alignmentPatternCenters.size();
+  for (int x = 0; x < max; x++) {
+    int i = alignmentPatternCenters[x] - 2;
+    for (int y = 0; y < max; y++) {
+      if ((x == 0 && (y == 0 || y == max - 1)) || (x == max - 1 && y == 0)) {
+        // No alignment patterns near the three finder paterns
+        continue;
+      }
+      bitMatrix->setRegion(alignmentPatternCenters[y] - 2, i, 5, 5);
+    }
+  }
+
+  // Vertical timing pattern
+  bitMatrix->setRegion(6, 9, 1, dimension - 17);
+  // Horizontal timing pattern
+  bitMatrix->setRegion(9, 6, dimension - 17, 1);
+
+  if (versionNumber > 6) {
+    // Version info, top right
+    bitMatrix->setRegion(dimension - 11, 0, 3, 6);
+    // Version info, bottom left
+    bitMatrix->setRegion(0, dimension - 11, 6, 3);
+  }
+
+  return std::move(bitMatrix);
 }

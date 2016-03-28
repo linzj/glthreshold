@@ -1,23 +1,12 @@
 #ifndef VERSION_H
 #define VERSION_H
-#include "LuminanceImage.h"
+#include "ErrorCorrectionLevel.h"
 #include <initializer_list>
 #include <memory>
 #include <stdint.h>
 #include <vector>
 
-enum class ErrorCorrectionLevel : uint32_t
-{
-
-  /** L = ~7% correction */
-  L = (0x01),
-  /** M = ~15% correction */
-  M = (0x00),
-  /** Q = ~25% correction */
-  Q = (0x03),
-  /** H = ~30% correction */
-  H = (0x02)
-};
+class LuminanceImage;
 
 /**
  * <p>Encapsualtes the parameters for one error-correction block in one symbol
@@ -102,6 +91,8 @@ public:
   {
     return (ecBlocks[static_cast<uint32_t>(ecLevel)]);
   }
+
+  std::unique_ptr<LuminanceImage> buildFunctionPattern();
 
 private:
   static std::unique_ptr<Version[]> VERSIONS;
