@@ -10,6 +10,7 @@
 #include <cmath>
 #include <memory>
 #include <nvImage.h>
+#include <stdlib.h>
 #define LOGE(tag, ...) GLIMPROC_LOGE(__VA_ARGS__)
 #if defined(ANDROID)
 #define BITMAP_PATH "/sdcard/shit.bmp"
