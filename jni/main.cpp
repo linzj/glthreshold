@@ -256,6 +256,8 @@ main(int argc, char** argv)
     }
 #endif
     clock_gettime(CLOCK_MONOTONIC, &t2);
+    result =
+      detector.detect(image->getWidth(), image->getHeight(), processed.get());
     if (result.get()) {
       printf(
         "found at (%lf, %lf), (%lf, %lf), (%lf, %lf), (%lf, %lf), text: %s.\n",
@@ -273,7 +275,7 @@ main(int argc, char** argv)
       for (int y = 0; y < limage->getHeight(); ++y, savep += rowBytes) {
         uint8_t* rowp = savep;
         for (int x = 0; x < limage->getWidth(); ++x, ++procp, rowp += 3) {
-          int black = (int)!limage->get(x, limage->getHeight() - y);
+          int black = (int)!limage->get(x, limage->getHeight() - 1 - y);
           rowp[0] = black * 255;
           rowp[1] = black * 255;
           rowp[2] = black * 255;
