@@ -55,7 +55,7 @@ public:
     this->ecBlocks.insert(this->ecBlocks.end(), lists.begin(), lists.end());
   }
 
-  inline int getECCodewordsPerBlock() { return ecCodewordsPerBlock; }
+  inline int getECCodewordsPerBlock() const { return ecCodewordsPerBlock; }
 
   int getNumBlocks();
 
@@ -64,12 +64,14 @@ public:
     return ecCodewordsPerBlock * getNumBlocks();
   }
 
-  inline std::vector<ECB>& getECBlocks() { return ecBlocks; }
+  inline const std::vector<ECB>& getECBlocks() const { return ecBlocks; }
 };
 
 class Version
 {
 public:
+  Version(const Version&) = delete;
+  Version& operator=(const Version&) = delete;
   static const Version& getProvisionalVersionForDimension(int dimension);
 
   static const Version& getVersionForNumber(int versionNumber);
@@ -92,7 +94,7 @@ public:
     return (ecBlocks[static_cast<uint32_t>(ecLevel)]);
   }
 
-  std::unique_ptr<LuminanceImage> buildFunctionPattern();
+  std::unique_ptr<LuminanceImage> buildFunctionPattern() const;
 
 private:
   static std::unique_ptr<Version[]> VERSIONS;

@@ -34,6 +34,15 @@ AlignmentPattern.cpp \
 AlignmentPatternFinder.cpp \
 FormatInformation.cpp \
 DataMask.cpp \
+BitMatrixParser.cpp \
+GenericGF.cpp \
+GenericGFPoly.cpp \
+ReedSolomonDecoder.cpp \
+DecoderResult.cpp \
+BitSource.cpp \
+DecodedBitStreamParser.cpp \
+QRCodeDecoder.cpp \
+DataBlock.cpp \
 ErrorCorrectionLevel.cpp \
 DefaultGridSampler.cpp \
 GridSampler.cpp \

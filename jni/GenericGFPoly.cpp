@@ -2,7 +2,7 @@
 #include "GenericGF.h"
 #include <algorithm>
 
-GenericGFPoly::GenericGFPoly(GenericGF* _field,
+GenericGFPoly::GenericGFPoly(const GenericGF* _field,
                              std::vector<int>&& _coefficients)
   : field(_field)
 {

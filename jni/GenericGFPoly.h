@@ -27,7 +27,7 @@ public:
    * or if leading coefficient is 0 and this is not a
    * constant polynomial (that is, it is not the monomial "0")
    */
-  GenericGFPoly(GenericGF* _field, std::vector<int>&& _coefficients);
+  GenericGFPoly(const GenericGF* _field, std::vector<int>&& _coefficients);
 
   inline const std::vector<int>& getCoefficients() const
   {
@@ -73,7 +73,7 @@ public:
   DivideResult divide(std::shared_ptr<GenericGFPoly>& other);
 
 private:
-  GenericGF* field;
+  const GenericGF* field;
   std::vector<int> coefficients;
 };
 #endif /* GENERICGFPOLY_H */

@@ -41,7 +41,7 @@ GenericGF::GenericGF(int _primitive, int _size, int b)
 }
 
 std::shared_ptr<GenericGFPoly>
-GenericGF::buildMonomial(int degree, int coefficient)
+GenericGF::buildMonomial(int degree, int coefficient) const
 {
   if (degree < 0) {
     throw 1;

@@ -41,14 +41,15 @@ public:
    */
   GenericGF(int primitive, int size, int b);
 
-  std::shared_ptr<GenericGFPoly>& getZero() { return zero; }
+  std::shared_ptr<GenericGFPoly>& getZero() const { return zero; }
 
-  std::shared_ptr<GenericGFPoly>& getOne() { return one; }
+  std::shared_ptr<GenericGFPoly>& getOne() const { return one; }
 
   /**
    * @return the monomial representing coefficient * x^degree
    */
-  std::shared_ptr<GenericGFPoly> buildMonomial(int degree, int coefficient);
+  std::shared_ptr<GenericGFPoly> buildMonomial(int degree,
+                                               int coefficient) const;
 
   /**
    * Implements both addition and subtraction -- they are the same in GF(size).

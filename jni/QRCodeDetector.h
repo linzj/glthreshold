@@ -22,6 +22,7 @@ public:
     }
 
     const LuminanceImage& getBits() const { return *bits; }
+    LuminanceImage& getBits() { return *bits; }
 
     const ResultPoint* getPoints() const { return points.get(); }
   private:

@@ -4,6 +4,7 @@
 #include "GLContextManager.h"
 #include "GLProgramManager.h"
 #include "ImageProcessorWorkflow.h"
+#include "QRCodeDecoder.h"
 #include "QRCodeDetector.h"
 #include "RGBToLuminance.h"
 #include <cmath>
@@ -243,13 +244,22 @@ main(int argc, char** argv)
     QRCodeDetector detector;
     std::unique_ptr<QRCodeDetector::DetectorResult> result =
       detector.detect(image->getWidth(), image->getHeight(), processed.get());
+    std::string text;
+    if (result.get()) {
+      QRCodeDecoder decoder;
+      std::unique_ptr<DecoderResult> decoderesult =
+        decoder.decode(&result->getBits());
+      text = decoderesult->getText();
+    }
     clock_gettime(CLOCK_MONOTONIC, &t2);
     if (result.get()) {
-      printf("found at (%lf, %lf), (%lf, %lf), (%lf, %lf), (%lf, %lf).\n",
-             result->getPoints()[0].getX(), result->getPoints()[0].getY(),
-             result->getPoints()[1].getX(), result->getPoints()[1].getY(),
-             result->getPoints()[2].getX(), result->getPoints()[2].getY(),
-             result->getPoints()[3].getX(), result->getPoints()[3].getY());
+      printf(
+        "found at (%lf, %lf), (%lf, %lf), (%lf, %lf), (%lf, %lf), text: %s.\n",
+        result->getPoints()[0].getX(), result->getPoints()[0].getY(),
+        result->getPoints()[1].getX(), result->getPoints()[1].getY(),
+        result->getPoints()[2].getX(), result->getPoints()[2].getY(),
+        result->getPoints()[3].getX(), result->getPoints()[3].getY(),
+        text.c_str());
       auto&& limage = image;
       int rowBytes = (limage->getWidth() * 24 + 31) / 32 * 4;
       std::unique_ptr<uint8_t[]> saveBits(

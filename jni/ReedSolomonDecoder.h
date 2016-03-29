@@ -8,10 +8,10 @@ class GenericGFPoly;
 class ReedSolomonDecoder final
 {
 private:
-  GenericGF* field;
+  const GenericGF* field;
 
 public:
-  explicit ReedSolomonDecoder(GenericGF* _field);
+  explicit ReedSolomonDecoder(const GenericGF* _field);
 
   /**
    * <p>Decodes given set of received codewords, which include both data and

@@ -21,7 +21,7 @@ class LuminanceImage;
  */
 class DataMask
 {
-
+public:
   /**
    * <p>Implementations of this method reverse the data masking process applied
    * to a QR Code and
@@ -30,7 +30,7 @@ class DataMask
    * @param bits representation of QR Code bits
    * @param dimension dimension of QR Code, represented by bits, being unmasked
    */
-  void unmaskBitMatrix(LuminanceImage* bits, int dimension);
+  void unmaskBitMatrix(LuminanceImage* bits, int dimension) const;
 
   virtual bool isMasked(int i, int j) const = 0;
 

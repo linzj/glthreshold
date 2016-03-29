@@ -4,14 +4,14 @@
 #include "LuminanceImage.h"
 #include "Version.h"
 
-BitMatrixParser::BitMatrixParser(const LuminanceImage* _bitMatrix)
+BitMatrixParser::BitMatrixParser(LuminanceImage* _bitMatrix)
   : bitMatrix(_bitMatrix)
   , parsedVersion(nullptr)
-  , mirror(false)
+  , mirror_(false)
 {
-  int dimension = bitMatrix.getHeight();
+  int dimension = bitMatrix->getHeight();
   if (dimension < 21 || (dimension & 0x03) != 1) {
-    throw FormatException.getFormatInstance();
+    throw 1;
   }
 }
 
@@ -38,7 +38,7 @@ BitMatrixParser::readFormatInformation()
   }
 
   // Read the top-right/bottom-left pattern too
-  int dimension = bitMatrix.getHeight();
+  int dimension = bitMatrix->getHeight();
   int formatInfoBits2 = 0;
   int jMin = dimension - 7;
   for (int j = dimension - 1; j >= jMin; j--) {
@@ -95,7 +95,7 @@ BitMatrixParser::readVersion()
     }
   }
 
-  theParsedVersion = Version.decodeVersionInformation(versionBits);
+  theParsedVersion = Version::decodeVersionInformation(versionBits);
   if (theParsedVersion != nullptr &&
       theParsedVersion->getDimensionForVersion() == dimension) {
     parsedVersion = theParsedVersion;
@@ -107,28 +107,27 @@ BitMatrixParser::readVersion()
 int
 BitMatrixParser::copyBit(int i, int j, int versionBits)
 {
-  bool bit = mirror ? bitMatrix->get(j, i) : bitMatrix->get(i, j);
+  bool bit = mirror_ ? bitMatrix->get(j, i) : bitMatrix->get(i, j);
   return bit ? (versionBits << 1) | 0x1 : versionBits << 1;
 }
 
-std::unique_ptr<uint8_t[]>
+std::vector<uint8_t>
 BitMatrixParser::readCodewords()
 {
-
   const FormatInformation& formatInfo = readFormatInformation();
   const Version& version = readVersion();
 
   // Get the data mask for the format used in this QR Code. This will exclude
   // some bits from reading as we wind through the bit matrix.
-  const DataMask& dataMask = DataMask.forReference(formatInfo.getDataMask());
-  int dimension = bitMatrix.getHeight();
+  const DataMask& dataMask = DataMask::forReference(formatInfo.getDataMask());
+  int dimension = bitMatrix->getHeight();
   dataMask.unmaskBitMatrix(bitMatrix, dimension);
 
   std::unique_ptr<LuminanceImage> functionPattern =
     version.buildFunctionPattern();
 
   bool readingUp = true;
-  std::unique_ptr<uint8_t[]> result(new uint8_t[version.getTotalCodewords()]);
+  std::vector<uint8_t> result(version.getTotalCodewords());
   int resultOffset = 0;
   int currentByte = 0;
   int bitsRead = 0;
@@ -153,7 +152,7 @@ BitMatrixParser::readCodewords()
           }
           // If we've made a whole byte, save it off
           if (bitsRead == 8) {
-            result.get()[resultOffset++] = static_cast<uint8_t>(currentByte);
+            result[resultOffset++] = static_cast<uint8_t>(currentByte);
             bitsRead = 0;
             currentByte = 0;
           }
@@ -175,17 +174,17 @@ BitMatrixParser::remask()
     return; // We have no format information, and have no data mask
   }
   const DataMask& dataMask =
-    DataMask.forReference(parsedFormatInfo->getDataMask());
-  int dimension = bitMatrix.getHeight();
+    DataMask::forReference(parsedFormatInfo->getDataMask());
+  int dimension = bitMatrix->getHeight();
   dataMask.unmaskBitMatrix(bitMatrix, dimension);
 }
 
 void
 BitMatrixParser::setMirror(bool mirror)
 {
-  parsedVersion = null;
-  parsedFormatInfo = null;
-  this.mirror = mirror;
+  parsedVersion = nullptr;
+  parsedFormatInfo = nullptr;
+  mirror_ = mirror;
 }
 
 void
@@ -194,8 +193,8 @@ BitMatrixParser::mirror()
   for (int x = 0; x < bitMatrix->getWidth(); x++) {
     for (int y = x + 1; y < bitMatrix->getHeight(); y++) {
       if (bitMatrix->get(x, y) != bitMatrix->get(y, x)) {
-        bitMatrix.flip(y, x);
-        bitMatrix.flip(x, y);
+        bitMatrix->flip(y, x);
+        bitMatrix->flip(x, y);
       }
     }
   }

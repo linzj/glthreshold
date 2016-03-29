@@ -101,7 +101,7 @@ DataMask::getStatic(int i)
 }
 
 void
-DataMask::unmaskBitMatrix(LuminanceImage* bits, int dimension)
+DataMask::unmaskBitMatrix(LuminanceImage* bits, int dimension) const
 {
   for (int i = 0; i < dimension; i++) {
     for (int j = 0; j < dimension; j++) {

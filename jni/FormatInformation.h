@@ -19,12 +19,12 @@ public:
   static std::unique_ptr<FormatInformation> decodeFormatInformation(
     int maskedFormatInfo1, int maskedFormatInfo2);
 
-  inline ErrorCorrectionLevel getErrorCorrectionLevel()
+  inline ErrorCorrectionLevel getErrorCorrectionLevel() const
   {
     return errorCorrectionLevel;
   }
 
-  uint8_t getDataMask() { return dataMask; }
+  uint8_t getDataMask() const { return dataMask; }
 
 private:
   ErrorCorrectionLevel errorCorrectionLevel;

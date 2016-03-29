@@ -2,7 +2,7 @@
 #include "GenericGF.h"
 #include "GenericGFPoly.h"
 
-ReedSolomonDecoder::ReedSolomonDecoder(GenericGF* _field)
+ReedSolomonDecoder::ReedSolomonDecoder(const GenericGF* _field)
   : field(_field)
 {
 }

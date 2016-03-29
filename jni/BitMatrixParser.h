@@ -1,6 +1,7 @@
 #ifndef BITMATRIXPARSER_H
 #define BITMATRIXPARSER_H
 #include <memory>
+#include <vector>
 
 class LuminanceImage;
 class Version;
@@ -10,17 +11,17 @@ class BitMatrixParser
 {
 
 private:
-  const LuminanceImage* bitMatrix;
+  LuminanceImage* bitMatrix;
   const Version* parsedVersion;
   std::unique_ptr<FormatInformation> parsedFormatInfo;
-  bool mirror;
+  bool mirror_;
 
 public:
   /**
    * @param bitMatrix {@link BitMatrix} to parse
    * @throws FormatException if dimension is not >= 21 and 1 mod 4
    */
-  BitMatrixParser(const LuminanceImage* bitMatrix);
+  BitMatrixParser(LuminanceImage* bitMatrix);
 
   /**
    * <p>Reads format information from one of its two locations within the QR
@@ -54,7 +55,7 @@ public:
    * @return bytes encoded within the QR Code
    * @throws FormatException if the exact number of bytes expected is not read
    */
-  std::unique_ptr<uint8_t[]> readCodewords();
+  std::vector<uint8_t> readCodewords();
 
   /**
    * Revert the mask removal done while reading the code words. The bit matrix
@@ -70,25 +71,10 @@ public:
    *
    * @param mirror Whether to read version and format information mirrored.
    */
-  void setMirror(bool mirror)
-  {
-    parsedVersion = null;
-    parsedFormatInfo = null;
-    this.mirror = mirror;
-  }
+  void setMirror(bool mirror);
 
   /** Mirror the bit matrix in order to attempt a second reading. */
-  void mirror()
-  {
-    for (int x = 0; x < bitMatrix->getWidth(); x++) {
-      for (int y = x + 1; y < bitMatrix->getHeight(); y++) {
-        if (bitMatrix->get(x, y) != bitMatrix->get(y, x)) {
-          bitMatrix.flip(y, x);
-          bitMatrix.flip(x, y);
-        }
-      }
-    }
-  }
+  void mirror();
 
 private:
   int copyBit(int i, int j, int versionBits);
