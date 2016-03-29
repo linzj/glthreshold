@@ -2,17 +2,17 @@
 #define ERRORCORRECTIONLEVEL_H
 #include <stdint.h>
 
-enum class ErrorCorrectionLevel : uint32_t
+enum class ErrorCorrectionLevel
 {
 
   /** L = ~7% correction */
-  L = (0x01),
+  L,
   /** M = ~15% correction */
-  M = (0x00),
+  M,
   /** Q = ~25% correction */
-  Q = (0x03),
+  Q,
   /** H = ~30% correction */
-  H = (0x02)
+  H
 };
 
 ErrorCorrectionLevel getErrorCorrectionLevelForBits(int bits);

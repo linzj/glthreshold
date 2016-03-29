@@ -7,9 +7,14 @@ LuminanceImage::reset(int width, int height, const void* data)
   m_width = width;
   m_height = height;
   m_data.reset(new uint8_t[width * height]);
-  if (data)
-    memcpy(m_data.get(), data, width * height);
-  else
+  if (data) {
+    for (int y = 0; y < height; ++y) {
+      const uint8_t* rline =
+        static_cast<const uint8_t*>(data) + (height - y) * width;
+      uint8_t* wline = static_cast<uint8_t*>(m_data.get()) + y * width;
+      memcpy(wline, rline, width);
+    }
+  } else
     memset(m_data.get(), 0xff, width * height);
 }
 

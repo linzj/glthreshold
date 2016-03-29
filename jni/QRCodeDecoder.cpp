@@ -62,7 +62,7 @@ QRCodeDecoder::decode(BitMatrixParser& parser)
     parser.readFormatInformation().getErrorCorrectionLevel();
 
   // Read codewords
-  auto&& codewords = parser.readCodewords();
+  std::vector<uint8_t> codewords(std::move(parser.readCodewords()));
   // Separate into data blocks
   auto dataBlocks =
     DataBlock::getDataBlocks(std::move(codewords), version, ecLevel);

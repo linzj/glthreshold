@@ -132,13 +132,14 @@ saveBitmap(int width, int height, const char* fileName, const char* data)
 {
   BITMAPINFOHEADER hdr;
 
+  int rowBytes = (width * 24 + 31) / 32 * 4;
   hdr.biSize = sizeof(hdr);
   hdr.biWidth = width;
   hdr.biHeight = height;
   hdr.biPlanes = 1;
   hdr.biBitCount = 24;
   hdr.biCompression = BI_RGB;
-  hdr.biSizeImage = width * height * 3;
+  hdr.biSizeImage = rowBytes * height;
   hdr.biXPelsPerMeter = 0;
   hdr.biClrUsed = 0;
   hdr.biClrImportant = 0;
@@ -241,16 +242,19 @@ main(int argc, char** argv)
     }
     processed = binarizeProcessCPU(image->getWidth(), image->getHeight(),
                                    static_cast<const uint8_t*>(data));
+#if 1
     QRCodeDetector detector;
     std::unique_ptr<QRCodeDetector::DetectorResult> result =
       detector.detect(image->getWidth(), image->getHeight(), processed.get());
     std::string text;
+#if 1
     if (result.get()) {
       QRCodeDecoder decoder;
       std::unique_ptr<DecoderResult> decoderesult =
         decoder.decode(&result->getBits());
       text = decoderesult->getText();
     }
+#endif
     clock_gettime(CLOCK_MONOTONIC, &t2);
     if (result.get()) {
       printf(
@@ -260,7 +264,7 @@ main(int argc, char** argv)
         result->getPoints()[2].getX(), result->getPoints()[2].getY(),
         result->getPoints()[3].getX(), result->getPoints()[3].getY(),
         text.c_str());
-      auto&& limage = image;
+      auto&& limage = &result->getBits();
       int rowBytes = (limage->getWidth() * 24 + 31) / 32 * 4;
       std::unique_ptr<uint8_t[]> saveBits(
         new uint8_t[rowBytes * limage->getHeight()]);
@@ -269,7 +273,7 @@ main(int argc, char** argv)
       for (int y = 0; y < limage->getHeight(); ++y, savep += rowBytes) {
         uint8_t* rowp = savep;
         for (int x = 0; x < limage->getWidth(); ++x, ++procp, rowp += 3) {
-          int black = (int)!limage->get(x, y);
+          int black = (int)!limage->get(x, limage->getHeight() - y);
           rowp[0] = black * 255;
           rowp[1] = black * 255;
           rowp[2] = black * 255;
@@ -303,6 +307,31 @@ main(int argc, char** argv)
                  reinterpret_cast<char*>(saveBits.get()));
     } else
       printf("not found.\n");
+#else
+    std::string text;
+    QRCodeDecoder decoder;
+    LuminanceImage limage;
+    limage.reset(image->getWidth(), image->getHeight(),
+                 static_cast<const uint8_t*>(processed.get()));
+    int rowBytes = (limage.getWidth() * 24 + 31) / 32 * 4;
+    std::unique_ptr<uint8_t[]> saveBits(
+      new uint8_t[rowBytes * limage.getHeight()]);
+    uint8_t* savep = saveBits.get();
+    for (int y = 0; y < limage.getHeight(); ++y, savep += rowBytes) {
+      uint8_t* rowp = savep;
+      for (int x = 0; x < limage.getWidth(); ++x, ++procp, rowp += 3) {
+        int black = (int)limage.get(x, y);
+        rowp[0] = black * 255;
+        rowp[1] = black * 255;
+        rowp[2] = black * 255;
+      }
+    }
+    saveBitmap(limage.getWidth(), limage.getHeight(), BITMAP_PATH,
+               reinterpret_cast<char*>(saveBits.get()));
+    std::unique_ptr<DecoderResult> decoderesult = decoder.decode(&limage);
+    text = decoderesult->getText();
+    GLIMPROC_LOGI("text: %s.\n", text.c_str());
+#endif
 #endif
 
     printf("one frame: %lf.\n", ((double)(t2.tv_sec - t1.tv_sec) +

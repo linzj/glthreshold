@@ -5,7 +5,8 @@ all: glthres
 OMPFLAGS := -fopenmp
 
 INCLUDES := -InvImage/include
-CXXFLAGS := -std=c++11 $(INCLUDES) -O2 -ggdb $(OMPFLAGS) #-fsanitize=address
+CFLAGS := -O2 -ggdb
+CXXFLAGS := -std=c++11 $(INCLUDES) $(CFLAGS) $(OMPFLAGS) #-fsanitize=address
 LDFLAGS := $(OMPFLAGS) #-fsanitize=address
 
 %.o: %.c

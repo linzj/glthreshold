@@ -92,7 +92,7 @@ private:
   static void decodeKanjiSegment(BitSource& bits, std::string& result,
                                  int count);
 
-  static void decodeByteSegment(BitSource& bits, std::string result, int count,
+  static void decodeByteSegment(BitSource& bits, std::string& result, int count,
                                 CharacterSetECI currentCharacterSetECI,
                                 DecoderResult::ByteSegments& byteSegments);
 

@@ -2,6 +2,8 @@
 
 BitSource::BitSource(const std::vector<uint8_t>& _bytes)
   : bytes(_bytes)
+  , byteOffset(0)
+  , bitOffset(0)
 {
 }
 

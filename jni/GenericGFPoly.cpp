@@ -26,7 +26,7 @@ GenericGFPoly::GenericGFPoly(const GenericGF* _field,
                 std::back_inserter(coefficients));
     }
   } else {
-    this->coefficients = std::move(coefficients);
+    this->coefficients = std::move(_coefficients);
   }
 }
 

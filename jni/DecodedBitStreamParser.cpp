@@ -310,7 +310,7 @@ DecodedBitStreamParser::decodeKanjiSegment(BitSource& bits, std::string& result,
 
 void
 DecodedBitStreamParser::decodeByteSegment(
-  BitSource& bits, std::string result, int count,
+  BitSource& bits, std::string& result, int count,
   CharacterSetECI currentCharacterSetECI,
   DecoderResult::ByteSegments& byteSegments)
 {
