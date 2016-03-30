@@ -8,6 +8,7 @@ LuminanceImage::reset(int width, int height, const void* data)
   m_height = height;
   m_data.reset(new uint8_t[width * height]);
   if (data) {
+#pragma omp parallel for
     for (int y = 0; y < height; ++y) {
       const uint8_t* rline =
         static_cast<const uint8_t*>(data) + (height - 1 - y) * width;

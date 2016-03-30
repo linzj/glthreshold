@@ -28,7 +28,6 @@ DefaultGridSampler::sampleGrid(const LuminanceImage& image, int dimensionX,
   }
   std::unique_ptr<LuminanceImage> bits(
     new LuminanceImage(dimensionX, dimensionY));
-#pragma omp parallel
   {
 #pragma omp parallel for
     for (int y = 0; y < dimensionY; y++) {
