@@ -36,13 +36,13 @@ RGBAToLuminance(int width, int height, const void* data)
   std::unique_ptr<uint8_t[]> result(new uint8_t[width * height]);
   uint8_t* rp = result.get();
 #if USE_INTEL_SIMD
-  __m128i factor1 = _mm_set_epi16(601, 601, 601, 601, 306, 306, 306, 306);
-  __m128i factor2 = _mm_set_epi16(0, 0, 0, 0, 117, 117, 117, 117);
-  __m128i zero = _mm_set_epi16(0, 0, 0, 0, 0, 0, 0, 0);
+  const __m128i factor1 = _mm_set_epi16(601, 601, 601, 601, 306, 306, 306, 306);
+  const __m128i factor2 = _mm_set_epi16(0, 0, 0, 0, 117, 117, 117, 117);
+  const __m128i zero = _mm_set_epi16(0, 0, 0, 0, 0, 0, 0, 0);
 #endif
 #pragma omp parallel
   {
-#pragma omp parallel for
+#pragma omp parallel for schedule(runtime)
     for (int y = 0; y < height; ++y) {
       const uint8_t* line = static_cast<const uint8_t*>(data) + y * rowBytes;
       uint8_t* lrp = rp + y * width;
@@ -69,6 +69,7 @@ RGBAToLuminance(int width, int height, const void* data)
           sum1 = _mm_add_epi32(fourR, fourG);
           sum1 = _mm_add_epi32(sum1, fourB);
           sum1 = _mm_srli_epi32(sum1, 10);
+          sum1 = _mm_shuffle_epi32(sum1, _MM_SHUFFLE(3, 1, 2, 0));
         }
         {
           __m128i two = _mm_load_si128(reinterpret_cast<const __m128i*>(line) + 1);
@@ -88,6 +89,7 @@ RGBAToLuminance(int width, int height, const void* data)
           sum2 = _mm_add_epi32(fourR, fourG);
           sum2 = _mm_add_epi32(sum2, fourB);
           sum2 = _mm_srli_epi32(sum2, 10);
+          sum2 = _mm_shuffle_epi32(sum2, _MM_SHUFFLE(3, 1, 2, 0));
         }
         __m128i sum = _mm_packs_epi32(sum1, sum2);
         __m128i lrpspacked = _mm_packus_epi16(sum, zero);
@@ -95,7 +97,8 @@ RGBAToLuminance(int width, int height, const void* data)
       }
 #endif
       for (; x < width; ++x, line += 4, lrp += 1) {
-        *lrp = (306 * (line[0]) + 601 * (line[1]) + 117 * (line[2])) >> 10;
+        uint8_t val = (306 * (line[0]) + 601 * (line[1]) + 117 * (line[2])) >> 10;
+        *lrp = val;
       }
     }
   }
