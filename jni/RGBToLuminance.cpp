@@ -5,9 +5,18 @@
 #else
 #define USE_INTEL_SIMD 0
 #endif
+#if defined(__arm__)
+#define USE_NEON_SIMD 0
+#else
+#define USE_NEON_SIMD 0
+#endif
 
 #if USE_INTEL_SIMD
 #include <emmintrin.h>
+#endif
+
+#if USE_NEON_SIMD
+#include <arm_neon.h>
 #endif
 
 std::unique_ptr<uint8_t[]>
@@ -40,9 +49,14 @@ RGBAToLuminance(int width, int height, const void* data)
   const __m128i factor2 = _mm_set_epi16(0, 0, 0, 0, 117, 117, 117, 117);
   const __m128i zero = _mm_set_epi16(0, 0, 0, 0, 0, 0, 0, 0);
 #endif
+#if USE_NEON_SIMD
+  const uint32x4_t rmask = { 0xff, 0xff, 0xff, 0xff };
+  const uint32x4_t gmask = { 0xff00, 0xff00, 0xff00, 0xff00 };
+  const uint32x4_t bmask = { 0xff0000, 0xff0000, 0xff0000, 0xff0000 };
+
+#endif
   // #pragma omp parallel
   {
-#pragma omp parallel for schedule(runtime)
     for (int y = 0; y < height; ++y) {
       const uint8_t* line = static_cast<const uint8_t*>(data) + y * rowBytes;
       uint8_t* lrp = rp + y * width;
@@ -96,7 +110,59 @@ RGBAToLuminance(int width, int height, const void* data)
         __m128i lrpspacked = _mm_packus_epi16(sum, zero);
         _mm_storel_epi64(reinterpret_cast<__m128i*>(lrp), lrpspacked);
       }
-#endif
+#endif // USE_INTEL_SIMD
+      __builtin_prefetch(line);
+#if USE_NEON_SIMD
+      int aligned_width = width & ~7;
+      for (; x < aligned_width; x += 8, line += 32, lrp += 8) {
+        uint16x4_t result1, result2;
+        uint8x8_t result;
+        {
+          uint32x4_t tmp, r, g, b;
+          uint16x4_t r16, g16, b16;
+          uint32x4_t factoredr, factoredg, factoredb;
+          uint32x4_t sum;
+
+          tmp = vld1q_u32(reinterpret_cast<const uint32_t*>(line));
+          r = vandq_u32(tmp, rmask);
+          r16 = vmovn_u32(r);
+          g = vandq_u32(tmp, gmask);
+          g16 = vqrshrun_n_s32((int32x4_t)g, 16);
+          b = vandq_u32(tmp, bmask);
+          b16 = vqrshrun_n_s32((int32x4_t)b, 16);
+          b16 = vshr_n_u16(b16, 8);
+          factoredr = vmull_n_u16(r16, 306);
+          factoredg = vmull_n_u16(g16, 601);
+          factoredb = vmull_n_u16(b16, 117);
+          sum = vaddq_u32(factoredr, factoredg);
+          sum = vaddq_u32(sum, factoredb);
+          result1 = vqrshrun_n_s32((int32x4_t)sum, 10);
+        }
+        {
+          uint32x4_t tmp, r, g, b;
+          uint16x4_t r16, g16, b16;
+          uint32x4_t factoredr, factoredg, factoredb;
+          uint32x4_t sum;
+
+          tmp = vld1q_u32(reinterpret_cast<const uint32_t*>(line) + 4);
+          r = vandq_u32(tmp, rmask);
+          r16 = vmovn_u32(r);
+          g = vandq_u32(tmp, gmask);
+          g16 = vqrshrun_n_s32((int32x4_t)g, 16);
+          b = vandq_u32(tmp, bmask);
+          b16 = vqrshrun_n_s32((int32x4_t)b, 16);
+          b16 = vshr_n_u16(b16, 8);
+          factoredr = vmull_n_u16(r16, 306);
+          factoredg = vmull_n_u16(g16, 601);
+          factoredb = vmull_n_u16(b16, 117);
+          sum = vaddq_u32(factoredr, factoredg);
+          sum = vaddq_u32(sum, factoredb);
+          result2 = vqrshrun_n_s32((int32x4_t)sum, 10);
+        }
+        result = vmovn_u16(vcombine_u16(result1, result2));
+        *((uint8x8_t*)lrp) = result;
+      }
+#endif // USE_NEON_SIMD
       for (; x < width; ++x, line += 4, lrp += 1) {
         uint8_t val =
           (306 * (line[0]) + 601 * (line[1]) + 117 * (line[2])) >> 10;
