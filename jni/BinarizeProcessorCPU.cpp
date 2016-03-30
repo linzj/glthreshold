@@ -1,5 +1,5 @@
 #include "BinarizeProcessorCPU.h"
-#include "GLCommon.h"
+#include "log.h"
 #include <stdlib.h>
 #include <string.h>
 #define LUMINANCE_BITS 5
@@ -74,7 +74,7 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
   std::unique_ptr<uint8_t[]> output(new uint8_t[width * height]);
   memset(output.get(), 0, width * height);
   {
-#pragma omp for schedule(runtime)
+#pragma omp parallel for schedule(runtime)
     for (int y = 0; y < height; ++y) {
       const uint8_t* line = data + y * width;
       int bucket[LUMINANCE_BUCKETS];

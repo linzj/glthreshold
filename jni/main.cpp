@@ -251,6 +251,10 @@ main(int argc, char** argv)
     }
     processed = binarizeProcessCPU(image->getWidth(), image->getHeight(),
                                    static_cast<const uint8_t*>(data));
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+    printf("after binarizeProcessCPU: %lf.\n",
+           ((double)(t2.tv_sec - t1.tv_sec) +
+            ((double)(t2.tv_nsec - t1.tv_nsec) / 1e9)));
 #if 1
     QRCodeDetector detector;
     std::unique_ptr<QRCodeDetector::DetectorResult> result =
