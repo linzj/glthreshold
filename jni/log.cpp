@@ -11,6 +11,8 @@
 #include <android/log.h>
 static const char* TAG = "GLIMGPROC";
 #else
+#include <sys/syscall.h> /* For SYS_xxx definitions */
+#include <unistd.h>
 #endif // USE_ANDROID_LOGCAT
 static const int MAX_BUFFER_SIZE = 256;
 
@@ -25,6 +27,7 @@ GLIMPROC_LOGE(const char* fmt, ...)
 #if USE_ANDROID_LOGCAT
   __android_log_write(ANDROID_LOG_ERROR, TAG, buf);
 #else
+  fprintf(stderr, "%lu: ", syscall(__NR_gettid, 0));
   fputs(buf, stderr);
 #endif // USE_ANDROID_LOGCAT
 }
@@ -40,6 +43,7 @@ GLIMPROC_LOGI(const char* fmt, ...)
 #if USE_ANDROID_LOGCAT
   __android_log_write(ANDROID_LOG_INFO, TAG, buf);
 #else
+  fprintf(stderr, "%lu: ", syscall(__NR_gettid, 0));
   fputs(buf, stderr);
 #endif // USE_ANDROID_LOGCAT
 }

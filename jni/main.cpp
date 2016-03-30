@@ -231,9 +231,17 @@ main(int argc, char** argv)
         data = processed.get();
         break;
       case GL_RGBA:
+        clock_gettime(CLOCK_MONOTONIC, &t2);
+        printf("before RGBA: %lf.\n",
+               ((double)(t2.tv_sec - t1.tv_sec) +
+                ((double)(t2.tv_nsec - t1.tv_nsec) / 1e9)));
         processed =
           RGBAToLuminance(image->getWidth(), image->getHeight(), data);
         data = processed.get();
+        clock_gettime(CLOCK_MONOTONIC, &t2);
+        printf("after RGBA: %lf.\n",
+               ((double)(t2.tv_sec - t1.tv_sec) +
+                ((double)(t2.tv_nsec - t1.tv_nsec) / 1e9)));
         break;
       case GL_LUMINANCE:
         break;
@@ -257,6 +265,8 @@ main(int argc, char** argv)
     }
 #endif
     clock_gettime(CLOCK_MONOTONIC, &t2);
+    printf("one frame: %lf.\n", ((double)(t2.tv_sec - t1.tv_sec) +
+                                 ((double)(t2.tv_nsec - t1.tv_nsec) / 1e9)));
     result =
       detector.detect(image->getWidth(), image->getHeight(), processed.get());
     if (result.get()) {

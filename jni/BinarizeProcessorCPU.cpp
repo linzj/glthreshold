@@ -73,7 +73,6 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
 {
   std::unique_ptr<uint8_t[]> output(new uint8_t[width * height]);
   memset(output.get(), 0, width * height);
-#pragma omp parallel
   {
 #pragma omp for schedule(runtime)
     for (int y = 0; y < height; ++y) {
@@ -103,6 +102,5 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
       }
     }
   }
-#pragma omp flush
   return output;
 }

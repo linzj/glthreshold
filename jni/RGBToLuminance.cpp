@@ -1,4 +1,5 @@
 #include "RGBToLuminance.h"
+#include "log.h"
 #if defined(__i386__) || defined(__x86_64__)
 #define USE_INTEL_SIMD 1
 #else
@@ -15,7 +16,6 @@ RGBToLuminance(int width, int height, const void* data)
   int rowBytes = (width * 24 + 31) / 32 * 4;
   std::unique_ptr<uint8_t[]> result(new uint8_t[width * height]);
   uint8_t* rp = result.get();
-#pragma omp parallel
   {
 #pragma omp parallel for
     for (int y = 0; y < height; ++y) {
@@ -40,7 +40,7 @@ RGBAToLuminance(int width, int height, const void* data)
   const __m128i factor2 = _mm_set_epi16(0, 0, 0, 0, 117, 117, 117, 117);
   const __m128i zero = _mm_set_epi16(0, 0, 0, 0, 0, 0, 0, 0);
 #endif
-#pragma omp parallel
+  // #pragma omp parallel
   {
 #pragma omp parallel for schedule(runtime)
     for (int y = 0; y < height; ++y) {
@@ -72,7 +72,8 @@ RGBAToLuminance(int width, int height, const void* data)
           sum1 = _mm_shuffle_epi32(sum1, _MM_SHUFFLE(3, 1, 2, 0));
         }
         {
-          __m128i two = _mm_load_si128(reinterpret_cast<const __m128i*>(line) + 1);
+          __m128i two =
+            _mm_load_si128(reinterpret_cast<const __m128i*>(line) + 1);
           __m128i first = _mm_unpacklo_epi8(two, zero);
           __m128i second = _mm_unpackhi_epi8(two, zero);
           __m128i syn1 = _mm_unpacklo_epi16(first, second);
@@ -97,7 +98,8 @@ RGBAToLuminance(int width, int height, const void* data)
       }
 #endif
       for (; x < width; ++x, line += 4, lrp += 1) {
-        uint8_t val = (306 * (line[0]) + 601 * (line[1]) + 117 * (line[2])) >> 10;
+        uint8_t val =
+          (306 * (line[0]) + 601 * (line[1]) + 117 * (line[2])) >> 10;
         *lrp = val;
       }
     }
