@@ -57,58 +57,109 @@ RGBAToLuminance(int width, int height, const void* data)
 #endif
   // #pragma omp parallel
   {
+// #pragma omp parallel for
     for (int y = 0; y < height; ++y) {
       const uint8_t* line = static_cast<const uint8_t*>(data) + y * rowBytes;
       uint8_t* lrp = rp + y * width;
       int x = 0;
 #if USE_INTEL_SIMD
-      int aligned_width = width & ~7;
-      for (; x < aligned_width; x += 8, line += 32, lrp += 8) {
-        __m128i sum1, sum2;
+      int aligned_width = width & ~15;
+      for (; x < aligned_width; x += 16, line += 64, lrp += 16) {
+        __m128i sum, sumnext;
         {
-          __m128i two = _mm_load_si128(reinterpret_cast<const __m128i*>(line));
-          __m128i first = _mm_unpacklo_epi8(two, zero);
-          __m128i second = _mm_unpackhi_epi8(two, zero);
-          __m128i syn1 = _mm_unpacklo_epi16(first, second);
-          __m128i syn2 = _mm_unpackhi_epi16(first, second);
-          __m128i syn3 = _mm_unpacklo_epi32(syn1, syn2);
-          __m128i syn4 = _mm_unpackhi_epi32(syn1, syn2);
-          __m128i mullofirst = _mm_mullo_epi16(syn3, factor1);
-          __m128i mullosecond = _mm_mullo_epi16(syn4, factor2);
-          __m128i mulhifirst = _mm_mulhi_epi16(syn3, factor1);
-          __m128i mulhisecond = _mm_mulhi_epi16(syn4, factor2);
-          __m128i fourR = _mm_unpacklo_epi16(mullofirst, mulhifirst);
-          __m128i fourG = _mm_unpackhi_epi16(mullofirst, mulhifirst);
-          __m128i fourB = _mm_unpacklo_epi16(mullosecond, mulhisecond);
-          sum1 = _mm_add_epi32(fourR, fourG);
-          sum1 = _mm_add_epi32(sum1, fourB);
-          sum1 = _mm_srli_epi32(sum1, 10);
-          sum1 = _mm_shuffle_epi32(sum1, _MM_SHUFFLE(3, 1, 2, 0));
+          __m128i sum1, sum2;
+          {
+            __m128i two =
+              _mm_load_si128(reinterpret_cast<const __m128i*>(line));
+            __m128i first = _mm_unpacklo_epi8(two, zero);
+            __m128i second = _mm_unpackhi_epi8(two, zero);
+            __m128i syn1 = _mm_unpacklo_epi16(first, second);
+            __m128i syn2 = _mm_unpackhi_epi16(first, second);
+            __m128i syn3 = _mm_unpacklo_epi32(syn1, syn2);
+            __m128i syn4 = _mm_unpackhi_epi32(syn1, syn2);
+            __m128i mullofirst = _mm_mullo_epi16(syn3, factor1);
+            __m128i mullosecond = _mm_mullo_epi16(syn4, factor2);
+            __m128i mulhifirst = _mm_mulhi_epi16(syn3, factor1);
+            __m128i mulhisecond = _mm_mulhi_epi16(syn4, factor2);
+            __m128i fourR = _mm_unpacklo_epi16(mullofirst, mulhifirst);
+            __m128i fourG = _mm_unpackhi_epi16(mullofirst, mulhifirst);
+            __m128i fourB = _mm_unpacklo_epi16(mullosecond, mulhisecond);
+            sum1 = _mm_add_epi32(fourR, fourG);
+            sum1 = _mm_add_epi32(sum1, fourB);
+            sum1 = _mm_srli_epi32(sum1, 10);
+            sum1 = _mm_shuffle_epi32(sum1, _MM_SHUFFLE(3, 1, 2, 0));
+          }
+          {
+            __m128i two =
+              _mm_load_si128(reinterpret_cast<const __m128i*>(line) + 1);
+            __m128i first = _mm_unpacklo_epi8(two, zero);
+            __m128i second = _mm_unpackhi_epi8(two, zero);
+            __m128i syn1 = _mm_unpacklo_epi16(first, second);
+            __m128i syn2 = _mm_unpackhi_epi16(first, second);
+            __m128i syn3 = _mm_unpacklo_epi32(syn1, syn2);
+            __m128i syn4 = _mm_unpackhi_epi32(syn1, syn2);
+            __m128i mullofirst = _mm_mullo_epi16(syn3, factor1);
+            __m128i mullosecond = _mm_mullo_epi16(syn4, factor2);
+            __m128i mulhifirst = _mm_mulhi_epi16(syn3, factor1);
+            __m128i mulhisecond = _mm_mulhi_epi16(syn4, factor2);
+            __m128i fourR = _mm_unpacklo_epi16(mullofirst, mulhifirst);
+            __m128i fourG = _mm_unpackhi_epi16(mullofirst, mulhifirst);
+            __m128i fourB = _mm_unpacklo_epi16(mullosecond, mulhisecond);
+            sum2 = _mm_add_epi32(fourR, fourG);
+            sum2 = _mm_add_epi32(sum2, fourB);
+            sum2 = _mm_srli_epi32(sum2, 10);
+            sum2 = _mm_shuffle_epi32(sum2, _MM_SHUFFLE(3, 1, 2, 0));
+          }
+          sum = _mm_packs_epi32(sum1, sum2);
         }
         {
-          __m128i two =
-            _mm_load_si128(reinterpret_cast<const __m128i*>(line) + 1);
-          __m128i first = _mm_unpacklo_epi8(two, zero);
-          __m128i second = _mm_unpackhi_epi8(two, zero);
-          __m128i syn1 = _mm_unpacklo_epi16(first, second);
-          __m128i syn2 = _mm_unpackhi_epi16(first, second);
-          __m128i syn3 = _mm_unpacklo_epi32(syn1, syn2);
-          __m128i syn4 = _mm_unpackhi_epi32(syn1, syn2);
-          __m128i mullofirst = _mm_mullo_epi16(syn3, factor1);
-          __m128i mullosecond = _mm_mullo_epi16(syn4, factor2);
-          __m128i mulhifirst = _mm_mulhi_epi16(syn3, factor1);
-          __m128i mulhisecond = _mm_mulhi_epi16(syn4, factor2);
-          __m128i fourR = _mm_unpacklo_epi16(mullofirst, mulhifirst);
-          __m128i fourG = _mm_unpackhi_epi16(mullofirst, mulhifirst);
-          __m128i fourB = _mm_unpacklo_epi16(mullosecond, mulhisecond);
-          sum2 = _mm_add_epi32(fourR, fourG);
-          sum2 = _mm_add_epi32(sum2, fourB);
-          sum2 = _mm_srli_epi32(sum2, 10);
-          sum2 = _mm_shuffle_epi32(sum2, _MM_SHUFFLE(3, 1, 2, 0));
+          __m128i sum1, sum2;
+          {
+            __m128i two =
+              _mm_load_si128(reinterpret_cast<const __m128i*>(line) + 2);
+            __m128i first = _mm_unpacklo_epi8(two, zero);
+            __m128i second = _mm_unpackhi_epi8(two, zero);
+            __m128i syn1 = _mm_unpacklo_epi16(first, second);
+            __m128i syn2 = _mm_unpackhi_epi16(first, second);
+            __m128i syn3 = _mm_unpacklo_epi32(syn1, syn2);
+            __m128i syn4 = _mm_unpackhi_epi32(syn1, syn2);
+            __m128i mullofirst = _mm_mullo_epi16(syn3, factor1);
+            __m128i mullosecond = _mm_mullo_epi16(syn4, factor2);
+            __m128i mulhifirst = _mm_mulhi_epi16(syn3, factor1);
+            __m128i mulhisecond = _mm_mulhi_epi16(syn4, factor2);
+            __m128i fourR = _mm_unpacklo_epi16(mullofirst, mulhifirst);
+            __m128i fourG = _mm_unpackhi_epi16(mullofirst, mulhifirst);
+            __m128i fourB = _mm_unpacklo_epi16(mullosecond, mulhisecond);
+            sum1 = _mm_add_epi32(fourR, fourG);
+            sum1 = _mm_add_epi32(sum1, fourB);
+            sum1 = _mm_srli_epi32(sum1, 10);
+            sum1 = _mm_shuffle_epi32(sum1, _MM_SHUFFLE(3, 1, 2, 0));
+          }
+          {
+            __m128i two =
+              _mm_load_si128(reinterpret_cast<const __m128i*>(line) + 3);
+            __m128i first = _mm_unpacklo_epi8(two, zero);
+            __m128i second = _mm_unpackhi_epi8(two, zero);
+            __m128i syn1 = _mm_unpacklo_epi16(first, second);
+            __m128i syn2 = _mm_unpackhi_epi16(first, second);
+            __m128i syn3 = _mm_unpacklo_epi32(syn1, syn2);
+            __m128i syn4 = _mm_unpackhi_epi32(syn1, syn2);
+            __m128i mullofirst = _mm_mullo_epi16(syn3, factor1);
+            __m128i mullosecond = _mm_mullo_epi16(syn4, factor2);
+            __m128i mulhifirst = _mm_mulhi_epi16(syn3, factor1);
+            __m128i mulhisecond = _mm_mulhi_epi16(syn4, factor2);
+            __m128i fourR = _mm_unpacklo_epi16(mullofirst, mulhifirst);
+            __m128i fourG = _mm_unpackhi_epi16(mullofirst, mulhifirst);
+            __m128i fourB = _mm_unpacklo_epi16(mullosecond, mulhisecond);
+            sum2 = _mm_add_epi32(fourR, fourG);
+            sum2 = _mm_add_epi32(sum2, fourB);
+            sum2 = _mm_srli_epi32(sum2, 10);
+            sum2 = _mm_shuffle_epi32(sum2, _MM_SHUFFLE(3, 1, 2, 0));
+          }
+          sumnext = _mm_packs_epi32(sum1, sum2);
         }
-        __m128i sum = _mm_packs_epi32(sum1, sum2);
-        __m128i lrpspacked = _mm_packus_epi16(sum, zero);
-        _mm_storel_epi64(reinterpret_cast<__m128i*>(lrp), lrpspacked);
+        __m128i lrpspacked = _mm_packus_epi16(sum, sumnext);
+        _mm_store_si128(reinterpret_cast<__m128i*>(lrp), lrpspacked);
       }
 #endif // USE_INTEL_SIMD
       __builtin_prefetch(line);
