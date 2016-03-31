@@ -72,9 +72,9 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
 {
   std::unique_ptr<uint8_t[]> output(new uint8_t[width * height]);
   memset(output.get(), 0, width * height);
-  bool failed = false;
+  volatile bool failed = false;
   {
-#pragma omp parallel for schedule(runtime)
+#pragma omp parallel for schedule(runtime) default(shared)
     for (int y = 0; y < height; ++y) {
       if (failed)
         continue;
