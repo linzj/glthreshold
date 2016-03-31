@@ -57,7 +57,7 @@ RGBAToLuminance(int width, int height, const void* data)
 #endif
   // #pragma omp parallel
   {
-// #pragma omp parallel for
+    // #pragma omp parallel for
     for (int y = 0; y < height; ++y) {
       const uint8_t* line = static_cast<const uint8_t*>(data) + y * rowBytes;
       uint8_t* lrp = rp + y * width;

@@ -18,7 +18,7 @@ include $(CLEAR_VARS)
 OMPFLAGS := -fopenmp
 
 LOCAL_CXXFLAGS += -std=c++11 -fexceptions
-LOCAL_CFLAGS += -I$(LOCAL_PATH)/nvImage/include -I$(LOCAL_PATH)/libpng-1.2.51 -O2 -Wall \
+LOCAL_CFLAGS += -I$(LOCAL_PATH)/nvImage/include -I$(LOCAL_PATH)/libpng-1.2.51 -Wall \
 				-DANDROID_LOGCAT_ENABLED \
 				-mfpu=neon $(OMPFLAGS)
 LOCAL_LDFLAGS += $(OMPFLAGS)
