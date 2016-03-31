@@ -109,6 +109,6 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
     }
   }
   if (failed)
-    throw std::exception();
+    throw 1;
   return output;
 }

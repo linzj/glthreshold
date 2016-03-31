@@ -88,7 +88,7 @@ AlignmentPatternFinder::find()
     return std::move(tmp.at(0));
   }
 
-  throw std::exception();
+  throw 1;
 }
 
 float

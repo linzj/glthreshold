@@ -44,7 +44,7 @@ std::shared_ptr<GenericGFPoly>
 GenericGF::buildMonomial(int degree, int coefficient) const
 {
   if (degree < 0) {
-    throw std::exception();
+    throw 1;
   }
   if (coefficient == 0) {
     return zero;
@@ -59,7 +59,7 @@ int
 GenericGF::log(int a) const
 {
   if (a == 0) {
-    throw std::exception();
+    throw 1;
   }
   return logTable.get()[a];
 }
@@ -68,7 +68,7 @@ int
 GenericGF::inverse(int a) const
 {
   if (a == 0) {
-    throw std::exception();
+    throw 1;
   }
   return expTable.get()[size - logTable.get()[a] - 1];
 }

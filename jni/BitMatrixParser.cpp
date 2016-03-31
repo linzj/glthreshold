@@ -11,7 +11,7 @@ BitMatrixParser::BitMatrixParser(LuminanceImage* _bitMatrix)
 {
   int dimension = bitMatrix->getHeight();
   if (dimension < 21 || (dimension & 0x03) != 1) {
-    throw std::exception();
+    throw 1;
   }
 }
 
@@ -53,7 +53,7 @@ BitMatrixParser::readFormatInformation()
   if (parsedFormatInfo.get()) {
     return *parsedFormatInfo;
   }
-  throw std::exception();
+  throw 1;
 }
 const Version&
 BitMatrixParser::readVersion()
@@ -101,7 +101,7 @@ BitMatrixParser::readVersion()
     parsedVersion = theParsedVersion;
     return *theParsedVersion;
   }
-  throw std::exception();
+  throw 1;
 }
 
 int
@@ -162,7 +162,7 @@ BitMatrixParser::readCodewords()
     readingUp ^= true; // readingUp = !readingUp; // switch directions
   }
   if (resultOffset != version.getTotalCodewords()) {
-    throw std::exception();
+    throw 1;
   }
   return result;
 }

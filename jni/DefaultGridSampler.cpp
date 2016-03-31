@@ -24,7 +24,7 @@ DefaultGridSampler::sampleGrid(const LuminanceImage& image, int dimensionX,
                                const PerspectiveTransform& transform)
 {
   if (dimensionX <= 0 || dimensionY <= 0) {
-    throw std::exception();
+    throw 1;
   }
   std::unique_ptr<LuminanceImage> bits(
     new LuminanceImage(dimensionX, dimensionY));

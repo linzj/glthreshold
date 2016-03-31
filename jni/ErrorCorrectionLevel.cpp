@@ -9,7 +9,7 @@ ErrorCorrectionLevel
 getErrorCorrectionLevelForBits(int bits)
 {
   if (bits < 0 || bits >= 4) {
-    throw std::exception();
+    throw 1;
   }
   return FOR_BITS[bits];
 }

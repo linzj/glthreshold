@@ -12,7 +12,7 @@ DataBlock::getDataBlocks(std::vector<uint8_t>&& rawCodewords,
 {
 
   if (rawCodewords.size() != version.getTotalCodewords()) {
-    throw std::exception();
+    throw 1;
   }
 
   // Figure out the number and size of data blocks used by this version and

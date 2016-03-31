@@ -41,7 +41,7 @@ const Version&
 Version::getProvisionalVersionForDimension(int dimension)
 {
   if (dimension % 4 != 1) {
-    throw std::exception();
+    throw 1;
   }
   return getVersionForNumber((dimension - 17) / 4);
 }
@@ -50,7 +50,7 @@ const Version&
 Version::getVersionForNumber(int versionNumber)
 {
   if (versionNumber < 1 || versionNumber > 40) {
-    throw std::exception();
+    throw 1;
   }
   ensureInitialize();
   return VERSIONS[versionNumber - 1];
