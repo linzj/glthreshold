@@ -148,17 +148,17 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
       int blackPoint = estimateBlackPoint(bucket, y);
       int x = 1;
 #if USE_NEON_SIMD
-      uint8x8_t vblackPoint = vdup_n_u8(blackPoint);
+      int16x8_t vblackPoint = vdupq_n_s16(blackPoint);
       for (; x < width - 1; x += 8) {
         uint8x8_t left = vld1_u8(line + x - 1);
         uint8x8_t center = vld1_u8(line + x);
         uint8x8_t right = vld1_u8(line + x + 1);
-        uint16x8_t centerl = vmovl_u8(center);
-        centerl = vshlq_n_u16(centerl, 2);
-        uint16x8_t luminance = vsubq_u16(centerl, vmovl_u8(left));
-        luminance = vsubq_u16(luminance, vmovl_u8(right));
-        luminance = vshrq_n_u16(luminance, 1);
-        uint8x8_t vout = vcge_u8(vmovn_u16(luminance), vblackPoint);
+        int16x8_t centerl = vreinterpretq_s16_u16(vmovl_u8(center));
+        centerl = vshlq_n_s16(centerl, 2);
+        int16x8_t luminance = vsubq_s16(centerl, vreinterpretq_s16_u16(vmovl_u8(left)));
+        luminance = vsubq_s16(luminance, vreinterpretq_s16_u16(vmovl_u8(right)));
+        luminance = vshrq_n_s16(luminance, 1);
+        uint8x8_t vout = vmovn_u16(vcgeq_s16(luminance, vblackPoint));
         vst1_u8(output.get() + y * width + x, vout);
       }
 #else
