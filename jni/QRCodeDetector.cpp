@@ -418,7 +418,7 @@ QRCodeDetector::detect(int width, int height, const uint8_t* data)
 
   auto patternInfo = selectBestPatterns();
   if (patternInfo.empty()) {
-    throw 1;
+    throw std::exception();
   }
   ResultPoint::orderBestPatterns(
     reinterpret_cast<const ResultPoint**>(patternInfo.data()));
@@ -701,7 +701,7 @@ computeDimension(const ResultPoint* topLeft, const ResultPoint* topRight,
       dimension--;
       break;
     case 3:
-      throw 1;
+      throw std::exception();
   }
   return dimension;
 }
@@ -718,14 +718,14 @@ QRCodeDetector::findAlignmentInRegion(float overallEstModuleSize,
   int alignmentAreaRightX =
     std::min(image.getWidth() - 1, estAlignmentX + allowance);
   if (alignmentAreaRightX - alignmentAreaLeftX < overallEstModuleSize * 3) {
-    throw 1;
+    throw std::exception();
   }
 
   int alignmentAreaTopY = std::max(0, estAlignmentY - allowance);
   int alignmentAreaBottomY =
     std::min(image.getHeight() - 1, estAlignmentY + allowance);
   if (alignmentAreaBottomY - alignmentAreaTopY < overallEstModuleSize * 3) {
-    throw 1;
+    throw std::exception();
   }
 
   AlignmentPatternFinder alignmentFinder(
@@ -783,7 +783,7 @@ QRCodeDetector::processFinderPatternInfo(const FinderPatternInfo& info)
 
   float moduleSize = calculateModuleSize(topLeft, topRight, bottomLeft);
   if (moduleSize < 1.0f) {
-    throw 1;
+    throw std::exception();
   }
   int dimension = computeDimension(topLeft, topRight, bottomLeft, moduleSize);
   const Version& provisionalVersion =
@@ -833,4 +833,24 @@ QRCodeDetector::processFinderPatternInfo(const FinderPatternInfo& info)
   }
   return std::unique_ptr<DetectorResult>(
     new DetectorResult(std::move(bits), std::move(points)));
+}
+
+QRCodeDetector::QRCodeDetector()
+{
+}
+
+QRCodeDetector::~QRCodeDetector()
+{
+}
+
+QRCodeDetector::DetectorResult::~DetectorResult()
+{
+}
+
+QRCodeDetector::DetectorResult::DetectorResult(
+  std::unique_ptr<LuminanceImage>&& bits,
+  std::unique_ptr<ResultPoint[]>&& points)
+{
+  this->bits = std::move(bits);
+  this->points = std::move(points);
 }

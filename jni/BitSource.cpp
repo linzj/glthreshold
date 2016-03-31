@@ -11,7 +11,7 @@ int
 BitSource::readBits(int numBits)
 {
   if (numBits < 1 || numBits > 32 || numBits > available()) {
-    throw 1;
+    throw std::exception();
   }
 
   int result = 0;

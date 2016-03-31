@@ -21,3 +21,7 @@ DecoderResult::DecoderResult(const std::vector<uint8_t>& _rawBytes,
   , structuredAppendSequenceNumber(_saSequence)
 {
 }
+
+DecoderResult::~DecoderResult()
+{
+}

@@ -116,7 +116,7 @@ const DataMask&
 DataMask::forReference(int reference)
 {
   if (reference < 0 || reference > 7) {
-    throw 1;
+    throw std::exception();
   }
   return getStatic(reference);
 }

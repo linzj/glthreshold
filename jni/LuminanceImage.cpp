@@ -48,11 +48,16 @@ LuminanceImage::LuminanceImage(int dimension)
 void
 LuminanceImage::set(int x, int y)
 {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height)
+    throw std::exception();
   m_data[y * m_width + x] = 0;
 }
+
 bool
 LuminanceImage::get(int x, int y) const
 {
+  if (x < 0 || x >= m_width || y < 0 || y >= m_height)
+    throw std::exception();
   return !m_data[y * m_width + x];
 }
 
@@ -60,15 +65,15 @@ void
 LuminanceImage::setRegion(int left, int top, int width, int height)
 {
   if (top < 0 || left < 0) {
-    throw 1;
+    throw std::exception();
   }
   if (height < 1 || width < 1) {
-    throw 1;
+    throw std::exception();
   }
   int right = left + width;
   int bottom = top + height;
   if (bottom > this->m_height || right > this->m_width) {
-    throw 1;
+    throw std::exception();
   }
   int rowSize = m_width;
   for (int y = top; y < bottom; y++) {

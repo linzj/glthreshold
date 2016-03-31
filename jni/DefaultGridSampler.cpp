@@ -24,12 +24,11 @@ DefaultGridSampler::sampleGrid(const LuminanceImage& image, int dimensionX,
                                const PerspectiveTransform& transform)
 {
   if (dimensionX <= 0 || dimensionY <= 0) {
-    throw 1;
+    throw std::exception();
   }
   std::unique_ptr<LuminanceImage> bits(
     new LuminanceImage(dimensionX, dimensionY));
   {
-#pragma omp parallel for
     for (int y = 0; y < dimensionY; y++) {
       std::vector<float> points(2 * dimensionX, 0.0f);
       int max = points.size();

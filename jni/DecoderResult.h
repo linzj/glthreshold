@@ -16,6 +16,7 @@ public:
 
   DecoderResult(const DecoderResult&) = delete;
   DecoderResult& operator=(const DecoderResult&) = delete;
+  ~DecoderResult();
 
   inline const std::vector<uint8_t>& getRawBytes() const { return rawBytes; }
 

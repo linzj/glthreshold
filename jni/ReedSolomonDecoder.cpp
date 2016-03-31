@@ -36,7 +36,7 @@ ReedSolomonDecoder::decode(std::vector<int>& received, int twoS)
   for (int i = 0; i < errorLocations.size(); i++) {
     int position = received.size() - 1 - field->log(errorLocations[i]);
     if (position < 0) {
-      throw 1;
+      throw std::exception();
     }
     received[position] =
       GenericGF::addOrSubtract(received[position], errorMagnitudes[i]);
@@ -70,7 +70,7 @@ ReedSolomonDecoder::runEuclideanAlgorithm(std::shared_ptr<GenericGFPoly> a,
     // Divide rLastLast by rLast, with quotient in q and remainder in r
     if (rLast->isZero()) {
       // Oops, Euclidean algorithm already terminated?
-      throw 1;
+      throw std::exception();
     }
     r = rLastLast;
     auto q = field->getZero();
@@ -87,13 +87,13 @@ ReedSolomonDecoder::runEuclideanAlgorithm(std::shared_ptr<GenericGFPoly> a,
     t = q->multiply(tLast)->addOrSubtract(tLastLast);
 
     if (r->getDegree() >= rLast->getDegree()) {
-      throw 1;
+      throw std::exception();
     }
   }
 
   int sigmaTildeAtZero = t->getCoefficient(0);
   if (sigmaTildeAtZero == 0) {
-    throw 1;
+    throw std::exception();
   }
 
   int inverse = field->inverse(sigmaTildeAtZero);
@@ -120,7 +120,7 @@ ReedSolomonDecoder::findErrorLocations(
     }
   }
   if (e != numErrors) {
-    throw 1;
+    throw std::exception();
   }
   return result;
 }

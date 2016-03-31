@@ -7,7 +7,7 @@ GenericGFPoly::GenericGFPoly(const GenericGF* _field,
   : field(_field)
 {
   if (_coefficients.size() == 0) {
-    throw 1;
+    throw std::exception();
   }
   int coefficientsLength = _coefficients.size();
   if (coefficientsLength > 1 && _coefficients[0] == 0) {
@@ -58,7 +58,7 @@ std::shared_ptr<GenericGFPoly>
 GenericGFPoly::addOrSubtract(std::shared_ptr<GenericGFPoly> other)
 {
   if (field != other->field) {
-    throw 1;
+    throw std::exception();
   }
   if (isZero()) {
     return other;
@@ -94,7 +94,7 @@ std::shared_ptr<GenericGFPoly>
 GenericGFPoly::multiply(std::shared_ptr<GenericGFPoly> other)
 {
   if (field != other->field) {
-    throw 1;
+    throw std::exception();
   }
   if (isZero() || other->isZero()) {
     return field->getZero();
@@ -137,7 +137,7 @@ std::shared_ptr<GenericGFPoly>
 GenericGFPoly::multiplyByMonomial(int degree, int coefficient)
 {
   if (degree < 0) {
-    throw 1;
+    throw std::exception();
   }
   if (coefficient == 0) {
     return field->getZero();
@@ -155,10 +155,10 @@ GenericGFPoly::DivideResult
 GenericGFPoly::divide(std::shared_ptr<GenericGFPoly>& other)
 {
   if (field != other->field) {
-    throw 1;
+    throw std::exception();
   }
   if (other->isZero()) {
-    throw 1;
+    throw std::exception();
   }
 
   std::shared_ptr<GenericGFPoly> quotient = field->getZero();

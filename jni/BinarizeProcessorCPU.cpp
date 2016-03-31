@@ -47,10 +47,9 @@ estimateBlackPoint(int buckets[LUMINANCE_BUCKETS], int y)
   // If there is too little contrast in the image to pick a meaningful black
   // point, throw rather
   // than waste time trying to decode the image, and risk false positives.
-  // if (secondPeak - firstPeak <= numBuckets / 16) {
-  //   GLIMPROC_LOGE("too little contrast.\n");
-  //   exit(1);
-  // }
+  if (secondPeak - firstPeak <= numBuckets / 16) {
+    return -1;
+  }
 
   // Find a valley between them that is low and closer to the white peak.
   int bestValley = secondPeak - 1;
@@ -73,9 +72,12 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
 {
   std::unique_ptr<uint8_t[]> output(new uint8_t[width * height]);
   memset(output.get(), 0, width * height);
+  bool failed = false;
   {
 #pragma omp parallel for schedule(runtime)
     for (int y = 0; y < height; ++y) {
+      if (failed)
+        continue;
       const uint8_t* line = data + y * width;
       int bucket[LUMINANCE_BUCKETS];
       memset(bucket, 0, sizeof(bucket));
@@ -86,6 +88,10 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
         bucket[pixel >> LUMINANCE_SHIFT]++;
       }
       int blackPoint = estimateBlackPoint(bucket, y);
+      if (blackPoint == -1) {
+        failed = true;
+        continue;
+      }
       int left = line[0] & 0xff;
       int center = line[1] & 0xff;
       for (int x = 1; x < width - 1; x++) {
@@ -102,5 +108,7 @@ binarizeProcessCPU(int width, int height, const uint8_t* data)
       }
     }
   }
+  if (failed)
+    throw std::exception();
   return output;
 }

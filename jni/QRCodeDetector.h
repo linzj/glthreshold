@@ -8,6 +8,7 @@
 class FinderPattern;
 class AlignmentPattern;
 class ResultPoint;
+
 class QRCodeDetector
 {
 public:
@@ -15,11 +16,8 @@ public:
   {
   public:
     DetectorResult(std::unique_ptr<LuminanceImage>&& bits,
-                   std::unique_ptr<ResultPoint[]>&& points)
-    {
-      this->bits = std::move(bits);
-      this->points = std::move(points);
-    }
+                   std::unique_ptr<ResultPoint[]>&& points);
+    ~DetectorResult();
 
     const LuminanceImage& getBits() const { return *bits; }
     LuminanceImage& getBits() { return *bits; }
@@ -31,6 +29,10 @@ public:
   };
   std::unique_ptr<DetectorResult> detect(int width, int height,
                                          const uint8_t* data);
+  QRCodeDetector(const QRCodeDetector&) = delete;
+  QRCodeDetector& operator=(const QRCodeDetector&) = delete;
+  QRCodeDetector();
+  ~QRCodeDetector();
 
 private:
   typedef std::unique_ptr<FinderPattern> FinderPatternPtr;

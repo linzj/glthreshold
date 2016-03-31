@@ -44,7 +44,7 @@ forBits(int bits)
       // country
       return DecodedBitStreamParser::Mode::HANZI;
     default:
-      throw 1;
+      throw std::exception();
   }
 }
 struct ModeInfo
@@ -81,7 +81,7 @@ getModeInfo(DecodedBitStreamParser::Mode mode)
   };
   auto found = map.find(static_cast<int>(mode));
   if (found == map.end()) {
-    throw 1;
+    throw std::exception();
   }
   return found->second;
 }
@@ -116,7 +116,7 @@ static DecodedBitStreamParser::CharacterSetECI
 getCharacterSetECIByValue(int value)
 {
   if (value < 0 || value >= 900) {
-    throw 1;
+    throw std::exception();
   }
   static std::unordered_map<int, DecodedBitStreamParser::CharacterSetECI> map =
     {
@@ -153,7 +153,7 @@ getCharacterSetECIByValue(int value)
     };
   auto found = map.find(value);
   if (found == map.end()) {
-    throw 1;
+    throw std::exception();
   }
   return found->second;
 }
@@ -188,7 +188,7 @@ DecodedBitStreamParser::decode(const std::vector<uint8_t>& bytes,
         fc1InEffect = true;
       } else if (mode == Mode::STRUCTURED_APPEND) {
         if (bits.available() < 16) {
-          throw 1;
+          throw std::exception();
         }
         // sequence number and parity is added later to the result metadata
         // Read next 8 bits (symbol sequence #) and 8 bits (parity data), then
@@ -223,7 +223,7 @@ DecodedBitStreamParser::decode(const std::vector<uint8_t>& bytes,
           } else if (mode == Mode::KANJI) {
             decodeKanjiSegment(bits, result, count);
           } else {
-            throw 1;
+            throw std::exception();
           }
         }
       }
@@ -245,7 +245,7 @@ DecodedBitStreamParser::decodeHanziSegment(BitSource& bits, std::string& result,
 {
   // Don't crash trying to read more bits than we have available.
   if (count * 13 > bits.available()) {
-    throw 1;
+    throw std::exception();
   }
 
   // Each character will require 2 bytes. Read the characters as 2-byte pairs
@@ -279,7 +279,7 @@ DecodedBitStreamParser::decodeKanjiSegment(BitSource& bits, std::string& result,
 {
   // Don't crash trying to read more bits than we have available.
   if (count * 13 > bits.available()) {
-    throw 1;
+    throw std::exception();
   }
 
   // Each character will require 2 bytes. Read the characters as 2-byte pairs
@@ -316,7 +316,7 @@ DecodedBitStreamParser::decodeByteSegment(
 {
   // Don't crash trying to read more bits than we have available.
   if (8 * count > bits.available()) {
-    throw 1;
+    throw std::exception();
   }
 
   char readBytes[count];
@@ -353,7 +353,7 @@ char
 DecodedBitStreamParser::toAlphaNumericChar(int value)
 {
   if (value >= sizeof(ALPHANUMERIC_CHARS)) {
-    throw 1;
+    throw std::exception();
   }
   return ALPHANUMERIC_CHARS[value];
 }
@@ -367,7 +367,7 @@ DecodedBitStreamParser::decodeAlphanumericSegment(BitSource& bits,
   int start = result.length();
   while (count > 1) {
     if (bits.available() < 11) {
-      throw 1;
+      throw std::exception();
     }
     int nextTwoCharsBits = bits.readBits(11);
     result.push_back(toAlphaNumericChar(nextTwoCharsBits / 45));
@@ -377,7 +377,7 @@ DecodedBitStreamParser::decodeAlphanumericSegment(BitSource& bits,
   if (count == 1) {
     // special case: one character left
     if (bits.available() < 6) {
-      throw 1;
+      throw std::exception();
     }
     result.push_back(toAlphaNumericChar(bits.readBits(6)));
   }
@@ -406,11 +406,11 @@ DecodedBitStreamParser::decodeNumericSegment(BitSource& bits,
   while (count >= 3) {
     // Each 10 bits encodes three digits
     if (bits.available() < 10) {
-      throw 1;
+      throw std::exception();
     }
     int threeDigitsBits = bits.readBits(10);
     if (threeDigitsBits >= 1000) {
-      throw 1;
+      throw std::exception();
     }
     result.push_back(toAlphaNumericChar(threeDigitsBits / 100));
     result.push_back(toAlphaNumericChar((threeDigitsBits / 10) % 10));
@@ -420,22 +420,22 @@ DecodedBitStreamParser::decodeNumericSegment(BitSource& bits,
   if (count == 2) {
     // Two digits left over to read, encoded in 7 bits
     if (bits.available() < 7) {
-      throw 1;
+      throw std::exception();
     }
     int twoDigitsBits = bits.readBits(7);
     if (twoDigitsBits >= 100) {
-      throw 1;
+      throw std::exception();
     }
     result.push_back(toAlphaNumericChar(twoDigitsBits / 10));
     result.push_back(toAlphaNumericChar(twoDigitsBits % 10));
   } else if (count == 1) {
     // One digit left over to read
     if (bits.available() < 4) {
-      throw 1;
+      throw std::exception();
     }
     int digitBits = bits.readBits(4);
     if (digitBits >= 10) {
-      throw 1;
+      throw std::exception();
     }
     result.push_back(toAlphaNumericChar(digitBits));
   }
@@ -459,5 +459,5 @@ DecodedBitStreamParser::parseECIValue(BitSource& bits)
     int secondThirdBytes = bits.readBits(16);
     return ((firstByte & 0x1F) << 16) | secondThirdBytes;
   }
-  throw 1;
+  throw std::exception();
 }

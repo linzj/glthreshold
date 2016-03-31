@@ -12,7 +12,7 @@ GridSampler::checkAndNudgePoints(const LuminanceImage& image,
     int x = (int)points[offset];
     int y = (int)points[offset + 1];
     if (x < -1 || x > width || y < -1 || y > height) {
-      throw 1;
+      throw std::exception();
     }
     nudged = false;
     if (x == -1) {
@@ -36,7 +36,7 @@ GridSampler::checkAndNudgePoints(const LuminanceImage& image,
     int x = (int)points[offset];
     int y = (int)points[offset + 1];
     if (x < -1 || x > width || y < -1 || y > height) {
-      throw 1;
+      throw std::exception();
     }
     nudged = false;
     if (x == -1) {
